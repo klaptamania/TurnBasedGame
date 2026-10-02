@@ -1,0 +1,13 @@
+{
+  "name": "Human",
+  "hp": 100,
+  "maxHp": 100,
+  "con": 5,
+  "dex": 5,
+  "intel": 5,
+  "wis": 5,
+  "str": 5,
+  "skillPoint" : 100,
+  "spRegen": 5,
+  "textureName": "Person"
+}

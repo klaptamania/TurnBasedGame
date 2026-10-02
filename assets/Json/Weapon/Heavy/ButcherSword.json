@@ -1,0 +1,10 @@
+{
+  "name": "Butcher Sword",
+  "requiredCon": 60,
+  "requiredDex": 0,
+  "requiredInt": 0,
+  "baseDamage": 50,
+  "conScale": "A+",
+  "strScale": "A",
+  "type": "Heavy"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Samurai",
+  "hp": 100,
+  "maxHp": 100,
+  "con": 75,
+  "dex": 90,
+  "intel": 10,
+  "wis": 100,
+  "str": 200,
+  "skillPoint": 100,
+  "spRegen": 50,
+  "textureName": "Person",
+  "weaponPath": "Json/Weapon/Medium/Katana.json"
+}

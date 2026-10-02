@@ -1,0 +1,8 @@
+{
+  "name": "Quick Snap",
+  "duration": 3,
+  "chance": 75,
+  "damage": 20,
+  "cooldown": 7,
+  "cost": 15
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Katana",
+  "requiredCon": 20,
+  "requiredDex": 10,
+  "requiredInt": 0,
+  "baseDamage": 20,
+  "strScale": "B-",
+  "dexScale": "C+",
+  "type": "Medium",
+  "activeSkillPath": [
+    "Json/Skill/ACTIVE_WEAPON_Reflection.json",
+    "Json/Skill/ACTIVE_WEAPON_Iaido.json"
+  ]
+}

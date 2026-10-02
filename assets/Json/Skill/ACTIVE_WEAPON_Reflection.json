@@ -1,0 +1,8 @@
+{
+  "name": "Reflection",
+  "duration": 1,
+  "chance": 35,
+  "damage": 0,
+  "cooldown": 3,
+  "cost": 2
+}

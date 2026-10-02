@@ -1,0 +1,8 @@
+{
+  "name": "Buff Str",
+  "duration": 4,
+  "chance": 75,
+  "damage": 0,
+  "cooldown": 6,
+  "cost": 15
+}

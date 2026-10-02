@@ -1,0 +1,8 @@
+{
+  "name": "Thrust",
+  "duration": 0,
+  "chance": 45,
+  "damage": 15,
+  "cooldown": 3,
+  "cost": 7
+}

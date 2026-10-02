@@ -1,0 +1,8 @@
+{
+  "name": "Iron Helm",
+  "requiredCon": 5,
+  "requiredDex": 0,
+  "requiredInt": 0,
+  "physicalDef": 2,
+  "type": "Head"
+}

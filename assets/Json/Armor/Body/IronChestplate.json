@@ -1,0 +1,9 @@
+{
+  "name": "Iron Chestplate",
+  "requiredCon": 7,
+  "requiredDex": 0,
+  "requiredInt": 0,
+  "physicalDef": 5,
+  "magicalDef": 0,
+  "type": "Body"
+}

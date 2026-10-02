@@ -1,0 +1,8 @@
+{
+  "name": "Thunderbolt",
+  "duration": 3,
+  "chance": 100,
+  "damage": 30,
+  "cooldown": 3,
+  "cost": 45
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Chef's Knife",
+  "requiredCon": 5,
+  "requiredDex": 5,
+  "requiredInt": 0,
+  "baseDamage": 10,
+  "conScale": "C",
+  "dexScale": "C",
+  "type": "Light"
+}

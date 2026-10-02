@@ -1,0 +1,8 @@
+{
+  "name": "Self Heal",
+  "duration": 3,
+  "chance": 75,
+  "damage": 20,
+  "cooldown": 3,
+  "cost": 4
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Dummy",
+  "hp": 100,
+  "maxHp": 100,
+  "con": 85,
+  "dex": 30,
+  "intel": 10,
+  "wis": 10,
+  "str": 90,
+  "skillPoint" : 100,
+  "spRegen": 15,
+  "textureName": "Person",
+  "armorPaths": [
+    "Json/Armor/Body/IronChestplate.json",
+    "Json/Armor/Head/IronHelm.json",
+    "Json/Armor/Leg/IronLeggings.json",
+    "Json/Armor/Feet/IronBoots.json"
+  ],
+  "weaponPath": "Json/Weapon/Heavy/ButcherSword.json",
+  "passivePath": "Json/Skill/PASSIVE_Revive.json",
+  "activeSkillPaths": [
+    "Json/Skill/ACTIVE_BuffStr.json",
+    "Json/Skill/ACTIVE_QuickSnap.json"
+]
+}

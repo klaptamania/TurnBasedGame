@@ -1,0 +1,9 @@
+{
+  "name": "Wooden Staff",
+  "requiredCon": 0,
+  "requiredDex": 5,
+  "requiredInt": 15,
+  "baseDamage": 5,
+  "wisScale" : "B-",
+  "type": "Super Light"
+}

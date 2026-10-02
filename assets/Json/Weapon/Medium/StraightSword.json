@@ -1,0 +1,13 @@
+{
+  "name": "Straight Sword",
+  "requiredCon": 20,
+  "requiredDex": 5,
+  "requiredInt": 0,
+  "baseDamage": 20,
+  "strScale": "B+",
+  "dexScale": "C-",
+  "type": "Medium",
+  "activeSkillPath": [
+    "Json/Skill/ACTIVE_WEAPON_Thrust.json"
+  ]
+}

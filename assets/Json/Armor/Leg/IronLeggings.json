@@ -1,0 +1,8 @@
+{
+  "name": "Iron Leggings",
+  "requiredCon": 7,
+  "requiredDex": 0,
+  "requiredInt": 0,
+  "physicalDef": 5,
+  "type": "Leg"
+}

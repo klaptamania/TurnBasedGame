@@ -1,0 +1,21 @@
+{
+  "name": "Weirdo",
+  "hp": 100,
+  "maxHp": 100,
+  "con": 30,
+  "dex": 20,
+  "intel": 80,
+  "wis": 120,
+  "str": 10,
+  "skillPoint": 100,
+  "spRegen": 55,
+  "textureName": "Person",
+  "armorPaths": [
+    "Json/Armor/Head/WizardHat.json"
+  ],
+  "weaponPath": "Json/Weapon/Super Light/WoodenStaff.json",
+  "activeSkillPaths": [
+    "Json/Skill/ACTIVE_Fireball.json",
+    "Json/Skill/ACTIVE_Thunderbolt.json"
+  ]
+}

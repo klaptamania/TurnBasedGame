@@ -1,0 +1,9 @@
+{
+  "name": "Wizard Hat",
+  "requiredCon": 0,
+  "requiredDex": 0,
+  "requiredInt": 10,
+  "physicalDef": 30,
+  "magicalDef": 5,
+  "type": "Head"
+}

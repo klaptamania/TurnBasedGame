@@ -1,0 +1,8 @@
+{
+  "name": "Nuclear Magic",
+  "duration": 3,
+  "chance": 75,
+  "damage": 500,
+  "cooldown": 3,
+  "cost": 50
+}

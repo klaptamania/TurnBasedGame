@@ -1,0 +1,8 @@
+{
+  "name": "Iaido",
+  "duration": 3,
+  "chance": 50,
+  "damage": 30,
+  "cooldown": 3,
+  "cost": 15
+}
