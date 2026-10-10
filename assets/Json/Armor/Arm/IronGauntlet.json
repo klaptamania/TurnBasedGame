@@ -1,0 +1,9 @@
+{
+  "name": "Iron Gauntlet",
+  "requiredCon": 3,
+  "requiredDex": 0,
+  "requiredInt": 0,
+  "physicalDef": 3,
+  "magicalDef": 0,
+  "type": "Arm"
+}

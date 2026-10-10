@@ -32,7 +32,7 @@ public class Entity implements Gacha {
     String textureName;
     String weaponPath;
     String passivePath;
-    String[] armorPaths = new String[4];
+    String[] armorPaths = new String[5];
     String[] activeSkillPaths = new String[5];
 
     EntityTexture entityTexture;
@@ -43,7 +43,7 @@ public class Entity implements Gacha {
 
     //================Equipment=================//
     Item weapon;
-    Item[] armor = new Item[4];
+    Item[] armor = new Item[5];
 
     //=================Skill====================//
 
@@ -214,7 +214,7 @@ public class Entity implements Gacha {
     public Animation<TextureRegion> getBasicAttack() { return basicAttack; }
 
     public void skillActivation(List<Entity> allies, List<Entity> enemies, int userIndex, boolean isAllyTurn){
-        SkillManager.skillActivation(allies, enemies, userIndex, isAllyTurn);
+//        SkillManager.skillActivation(allies, enemies, userIndex, isAllyTurn);
     }
 
     public Entity(){
@@ -254,14 +254,17 @@ public class Entity implements Gacha {
                         case "Head":
                             armor[0] = temp;
                             break;
-                        case "Body":
+                        case "Arm":
                             armor[1] = temp;
                             break;
-                        case "Leg":
+                        case "Body":
                             armor[2] = temp;
                             break;
-                        case "Feet":
+                        case "Leg":
                             armor[3] = temp;
+                            break;
+                        case "Feet":
+                            armor[4] = temp;
                             break;
                     }
                 }
@@ -284,10 +287,6 @@ public class Entity implements Gacha {
         spRegen += Math.round(intel / 10f);
     }
 
-
-
-    public void regenSP() { skillPoint = Math.min(skillPoint + spRegen, maxSkillPoint); }
-
     public void removeStatus(String name){
         status.remove(name);
     }
@@ -296,4 +295,15 @@ public class Entity implements Gacha {
     public int getWeight() {
         return getCon();
     }
+
+    public List<Skill> getAllSkill() {
+        List<Skill> skillLst = new ArrayList<>();
+        if (this.getActiveSkill() != null) skillLst.addAll(this.getActiveSkill());
+
+        if (this.getWeapon() != null && this.getWeapon().haveActiveSkill()) {
+            skillLst.addAll(this.getWeapon().getActiveSkill());
+        }
+        return skillLst;
+    }
+
 }

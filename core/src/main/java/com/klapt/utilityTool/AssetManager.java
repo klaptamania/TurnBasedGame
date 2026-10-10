@@ -2,10 +2,13 @@ package com.klapt.utilityTool;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+
 import java.util.HashMap;
 
 public class AssetManager {
     HashMap<String, Texture> textures = new HashMap<>();
+    Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
 
     public AssetManager(){
         getAllTexture();
@@ -31,6 +34,7 @@ public class AssetManager {
         textures.put("Iron Leggings", new Texture(Gdx.files.internal("Image/Armor/Leg/iron_leggings.png")));
         textures.put("Iron Helm", new Texture(Gdx.files.internal("Image/Armor/Head/iron_helm.png")));
         textures.put("Iron Boots", new Texture(Gdx.files.internal("Image/Armor/Feet/ironBoots.png")));
+        textures.put("Iron Gauntlet", new Texture(Gdx.files.internal("Image/Armor/Arm/iron_gauntlet.png")));
 
         //Animation
         textures.put("BA1", new Texture(Gdx.files.internal("Ani/Basic Attack/frame_001.png")));
@@ -64,10 +68,13 @@ public class AssetManager {
     public Texture getTexture(String name){
         return textures.get(name);
     }
+    public Skin getSkin() {return skin;}
 
     public void dispose(){
         for(var t : textures.values()){
             t.dispose();
         }
+
+        skin.dispose();
     }
 }

@@ -4,33 +4,43 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.klapt.entity.Entity;
 import com.klapt.entity.EntityBehavior;
-import com.klapt.gameplayStuff.CharacterChoosing;
 import com.klapt.rendering.EntityRenderer;
 import com.klapt.factory.EntityFactory;
 import com.klapt.main.GameScreen;
-import com.klapt.utilityTool.QuickGacha;
+import com.klapt.skill.Skill;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 
 public class CombatManager {
 
-    List<Entity> ally = new ArrayList<>();
-    List<Entity> enemy = new ArrayList<>();
+    public enum CombatState {
+        START_TURN,
+        WAIT_FOR_INPUT,
+        ENEMY_THINKING,
+        EXECUTE_ACTION,
+        CHECK_WIN_LOSE
+    }
+
+
+    Entity player;
+    Entity opponent;
+
+    Entity firstTake, secondTake;
+    boolean isTurnPrepared = false;
 
     Stage stage;
 
-    boolean turn = true;
-    int iA = 0, iE = 0;
-    float running = 0;
+    float delayedProcessing = 0;
+    boolean progress1 = false, progress2 = false;
+
+    CombatState currentState = CombatState.START_TURN;
+
     float width, height;
 
     public CombatManager(float width, float height){
@@ -45,122 +55,220 @@ public class CombatManager {
     }
 
     public void addEntity(boolean isAlly, String filePath){
-        List<Entity> currentList = isAlly ? ally : enemy;
+        Entity currentEntity = EntityFactory.getEntityFromJson(filePath, 1);
 
-        currentList.add(EntityFactory.getEntityFromJson(filePath, currentList.size()));
+        currentEntity = EntityFactory.getEntityFromJson(filePath, 1);
 
-        int count = currentList.size();
-        float divided = width / (count + 1);
+        float divided = width / (2);
+        currentEntity.setX(divided - (GameScreen.imageTile / 2f));
+        currentEntity.setY(isAlly ? 250 : 500);
 
-        for(int i = 0; i < count; i++){
-            currentList.get(i).setX((i + 1) * divided - (GameScreen.imageTile / 2f));
-            currentList.get(i).setY(isAlly ? 250 : 500);
+        if(isAlly){
+            player = currentEntity;
+        }else opponent = currentEntity;
 
-            System.out.printf("%s have %d HP!\n", currentList.get(i).getName(), currentList.get(i).getHp());
+        System.out.printf("%s have %d HP!\n", currentEntity.getName(), currentEntity.getHp());
+
+    }
+
+    public void update(float deltaTime){
+        stage.act(deltaTime);
+
+        switch(currentState){
+            case START_TURN :
+                if(player != null && player.isAlive() && opponent.isAlive()){
+                    showPlayerUI();
+
+                    currentState = CombatState.WAIT_FOR_INPUT;
+                }
+                break;
+            case WAIT_FOR_INPUT :
+                break;
+            case ENEMY_THINKING :
+                if(opponent != null && opponent.isAlive()){
+                    opponentThinking();
+                    currentState = CombatState.EXECUTE_ACTION;
+                }
+
+                break;
+            case EXECUTE_ACTION :
+                checkingTurn(deltaTime);
+
+                break;
+            case CHECK_WIN_LOSE :
+                if(player.getHp() > 0 && opponent.getHp() > 0){
+                    currentState = CombatState.START_TURN;
+                    overTime();
+                }
+
+                break;
+        }
+    }
+    private void startCombatState(){
+
+        boolean opponentHasReflection = reflectionCheck(opponent);
+        boolean playerHasReflection = reflectionCheck(player);
+
+        if (opponentHasReflection && !playerHasReflection) {
+            firstTake = opponent;
+            secondTake = player;
+        } else {
+            firstTake = player;
+            secondTake = opponent;
+        }
+
+        isTurnPrepared = true;
+    }
+
+    private void checkingTurn(float deltaTime){
+        if(!isTurnPrepared){
+            startCombatState();
+        }
+        executing(firstTake, secondTake, deltaTime);
+    }
+
+    private boolean reflectionCheck(Entity entity){
+        String str = entity.getMove();
+
+        if(str == null || !str.startsWith("SkillActivation ")) return false;
+
+        try {
+            int skillIndex = Integer.parseInt(str.substring("SkillActivation ".length()).trim());
+            List<Skill> skills = entity.getAllSkill();
+
+            if (skills != null && skillIndex >= 0 && skillIndex < skills.size()) {
+                return "Reflection".equalsIgnoreCase(skills.get(skillIndex).getName());
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        return false;
+    }
+
+
+    private void executing(Entity first, Entity second, float deltaTime) {
+        delayedProcessing += deltaTime;
+        if(!progress1){
+            progress1 = true;
+            moveProcessing(first);
+        }
+
+        if(!progress2 && delayedProcessing >= 0.4f){
+            progress2 = true;
+            moveProcessing(second);
+        }
+
+        if(delayedProcessing >= 1f){
+            progress1 = false;
+            progress2 = false;
+            delayedProcessing -= 1f;
+            isTurnPrepared = false;
+            currentState = CombatState.CHECK_WIN_LOSE;
         }
     }
 
-    public void combat(float deltaTime){
-        List<Entity> currentList = turn ? ally : enemy;
-        List<Entity> currentDList = turn ? enemy : ally;
-        int index = turn ? iA : iE;
+    private void overTime() {
+        EntityBehavior.statusProcessing(player);
+        EntityBehavior.statusProcessing(opponent);
 
-        Entity currentEntity = currentList.get(index);
+        EntityBehavior.clearingStatus(player);
+        EntityBehavior.clearingStatus(opponent);
 
-        MoveSetTable moveSetTable = stage.getRoot().findActor( currentEntity.getName()+ "SelectMove");
-        if(moveSetTable== null && currentEntity.getMove() == null){
-            stage.addActor(new MoveSetTable(currentEntity));
+        EntityBehavior.stunProgress(player);
+        EntityBehavior.stunProgress(opponent);
+
+        SkillManager.onCDSkill(player);
+        SkillManager.onCDSkill(opponent);
+
+        EntityBehavior.regenSP(player);
+        EntityBehavior.regenSP(opponent);
+
+        player.setAlreadyAttack(false);
+        opponent.setAlreadyAttack(false);
+
+        player.setCastSkill(false);
+        opponent.setCastSkill(false);
+    }
+
+    private void moveProcessing(Entity entity){
+        String str = entity.getMove();
+        int firstSpace = str.indexOf(" ");
+        String order = "", skillIndex = "";
+        if (firstSpace != -1) {
+            String part1 = str.substring(0, firstSpace);          // "Skill"
+            String part2 = str.substring(firstSpace + 1).trim(); // "Mr Beast"
+
+            order = part1;
+            skillIndex = part2;
+        }else{
+            order = str;
+        }
+        switch(order){
+            case "Attack":
+                EntityBehavior.attack(entity, entity == player ? opponent : player, entity == player);
+                break;
+            case "SkillActivation":
+                if(skillIndex.isEmpty()) return;
+                SkillManager.skillActivation(entity, entity == player ? opponent : player, Integer.parseInt(skillIndex), entity == player );
+                break;
         }
 
-        if(currentEntity.getMove() == null || currentEntity.getMove().contentEquals("")){
-            stage.act(deltaTime);
+        entity.setMove("");
+    }
+
+    private void opponentThinking() {
+        opponent.setAlreadyAttack(false);
+        opponent.setMove("SkillActivation 0");
+        System.out.println(opponent.getAllSkill().getFirst().getCdLeft());
+    }
+
+    public void setPlayerMoveSkillAct() {
+        clearUI();
+
+        List<Skill> skillLst = player.getAllSkill();
+
+        if(skillLst.isEmpty()){
+            showPlayerUI();
             return;
         }
 
-        switch(currentEntity.getMove()){
-            case "Attack":
-                SelectEntityTable selectEntityTable = stage.getRoot().findActor( "EntitySelection");
-
-                if(selectEntityTable == null){
-                    if (moveSetTable != null) {
-                        moveSetTable.remove();
-                    }
-                    selectEntityTable = new SelectEntityTable(currentDList);
-                    stage.addActor(selectEntityTable);
-                }
-                String name = selectEntityTable.getEntityName();
-
-                for(Entity e : currentDList){
-                    if(e.getName().contentEquals(name)){
-                        EntityBehavior.attack(currentEntity, e, turn);
-                    }
-                }
-
-                break;
-            case "Skill":
-                break;
-        }
-
-        stage.act(deltaTime);
+        stage.addActor(new SkillSelectionTable(player, this));
     }
 
-    private int getRandomUnattackedIndex(List<Entity> listed){
-        int index = -1;
-        List<Integer> unAttackList = new ArrayList<>();
+    public void executePlayerAttack() {
+        clearUI();
+        currentState = CombatState.ENEMY_THINKING;
+    }
 
-        //Take all un attack entity
-        for(int i = 0; i < listed.size(); i++){
-            if(listed.get(i).isAlive() && !listed.get(i).isAlreadyAttack()) unAttackList.add(i);
-        }
+    public void executePlayerSkillActivation(){
+        clearUI();
+        currentState = CombatState.ENEMY_THINKING;
+    }
 
-        //Return -1 if there's all attacked
-        if(unAttackList.isEmpty()) return index;
+    public void showPlayerUI() {
+        clearUI();
 
-        //Return the index of random none attack entity
-        index = MathUtils.random(0, unAttackList.size() - 1);
+        stage.addActor(new MoveSetTable(player, this));
+    }
 
-        return unAttackList.get(index);
+    private void clearUI() { stage.getRoot().clearChildren(); }
+
+    public void draw(SpriteBatch batch, Texture bg, float deltaTime){
+        batch.draw(bg, 0, 0, width, height);
+
+        EntityRenderer.draw(batch, player, player.getX(), player.getY(), deltaTime);
+
+        EntityRenderer.draw(batch, opponent, opponent.getX(), opponent.getY(), deltaTime);
     }
 
     public static int getRandomAliveIndex(List<Entity> listed) {
-        int index = -1;
-
         List<Integer> aliveIndices = new ArrayList<>();
-        //Take all alive entity
-        for(int i = 0; i < listed.size(); i++){
-            if(listed.get(i).isAlive() ) aliveIndices.add(i);
+        for (int i = 0; i < listed.size(); i++) {
+            if (listed.get(i).isAlive()) aliveIndices.add(i);
         }
-
-        //Return -1 if there's no alive entity
-        if(aliveIndices.isEmpty()) return index;
-
-        //Return the index of random alive entity
-        index = MathUtils.random(0, aliveIndices.size() - 1);
-
-        return aliveIndices.get(index);
-    }
-
-    public void draw(SpriteBatch batch, Texture bg, float deltaTime){
-        int count = ally.size();
-        float divided = width / (count + 1);
-        batch.draw(bg, 0, 0, width, height);
-
-        //Allies
-        for(int i = 0; i < count; i++){
-            float x = (i + 1) * divided - (GameScreen.imageTile / 2f);
-            EntityRenderer.draw(batch, ally.get(i), x, 250, deltaTime);
-        }
-
-
-        //Enemy
-        count = enemy.size();
-        divided = width / (count + 1);
-
-        for(int i = 0; i < count; i++){
-            float x = (i + 1) * divided - (GameScreen.imageTile / 2f);
-            EntityRenderer.draw(batch, enemy.get(i), x, 500, deltaTime);
-        }
-
+        if (aliveIndices.isEmpty()) return -1;
+        return aliveIndices.get(MathUtils.random(0, aliveIndices.size() - 1));
     }
 
     public void drawStage(){

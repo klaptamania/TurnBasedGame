@@ -39,11 +39,8 @@ public class GameScreen implements Screen {
         cam = new OrthographicCamera();
         vp = new FitViewport(360, 640, cam);
         cm = new CombatManager(vp.getWorldWidth(), vp.getWorldHeight());
-        cm.addEntity(true, "Json/Entity/Sample/Wizard.json");
-        cm.addEntity(true, "Json/Entity/Sample/Samurai.json");
         cm.addEntity(false, "Json/Entity/Sample/Samurai.json");
-        cm.addEntity(false, "Json/Entity/Sample/Wizard.json");
-        cm.addEntity(false, "Json/Entity/Sample/Dummy.json");
+        cm.addEntity(true, "Json/Entity/Sample/Dummy.json");
 
         TextDamageRenderer.loadFont(new Color(255,255,255,1));
         AnimationHolder.loadAllAnimations();
@@ -141,7 +138,7 @@ public class GameScreen implements Screen {
 
 
     private void combatProcessing(float deltaTime) {
-        cm.combat(deltaTime);
+        cm.update(deltaTime);
 
         TextDamageRenderer.textProcessor(deltaTime);
         TextDamageRenderer.garbageTextProcessor();

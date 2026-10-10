@@ -48,7 +48,6 @@ public class EntityRenderer {
 
             if(entity.isAttackAnimation()){
                 entity.setStateCounter(entity.getStateCounter() + deltaTime);
-                drawBasicAttack(batch, entity);
             }
 
             drawHealthBar(batch, entity);

@@ -19,8 +19,7 @@ import java.util.List;
 public class SelectEntityTable extends Table {
     Button[] button;
     List<Entity> list;
-    String name = "";
-    Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+    String entityName = "";
 
     public SelectEntityTable(List<Entity> selectionList){
         this.setFillParent(true);
@@ -56,10 +55,11 @@ public class SelectEntityTable extends Table {
 
             button[i] = new Button(transparentStyle);
             button[i].add(characterStack);
+            button[i].setClip(true);
             button[i].addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y){
-                    name = e.getName();
+                    entityName = e.getName();
                 }
             });
             this.add(button[i]).size(64, 64).pad(15);
@@ -67,5 +67,5 @@ public class SelectEntityTable extends Table {
 
     }
 
-    public String getEntityName() { return name; }
+    public String getEntityName() { return entityName; }
 }

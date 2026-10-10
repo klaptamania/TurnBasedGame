@@ -90,65 +90,61 @@ public class SkillManager {
         }
     }
 
-    public static void skillActivation(List<Entity> allies, List<Entity> enemies, int userIndex, boolean isAllyTurn){
-        //get user
-        Entity user = allies.get(userIndex);
+    public static void skillActivation(Entity user, Entity target, int index, boolean isAllyTurn) {
+        if (user == null) return;
 
-        if(user.containStatus("SILENCE")){
+        if (user.containStatus("SILENCE")) {
             return;
         }
 
-        //if user already cast a skill
-        if(user.isCastSkill()) return;
+        // if user already cast a skill
+        if (user.isCastSkill()) return;
 
         user.setCastSkill(true);
-        //get target;
-        Entity target = null;
-        int targetIndex = CombatManager.getRandomAliveIndex(enemies);
-        if(targetIndex != -1) target = enemies.get(targetIndex);
-        if(target != null && !target.isAlive()) return;
 
-        //get skills
+        if (target != null && !target.isAlive()) return;
+
+        // get skills
         List<Skill> skillLst = new ArrayList<>();
-        if(user.getActiveSkill() != null) skillLst.addAll(user.getActiveSkill());
+        if (user.getActiveSkill() != null) skillLst.addAll(user.getActiveSkill());
 
-        if(user.getWeapon().haveActiveSkill()){
+        if (user.getWeapon() != null && user.getWeapon().haveActiveSkill()) {
             skillLst.addAll(user.getWeapon().getActiveSkill());
         }
 
-        Skill s = getRandomActiveSkill(skillLst);
+        Skill s = skillLst.get(index);
 
-        //if user dont hav any skill
-        if(s == null) return;
+        // if user dont hav any skill
+        if (s == null) return;
 
-        if(user.getSkillPoint() < s.getCost()){
+        if (user.getSkillPoint() < s.getCost()) {
             System.out.printf("%s failed: Not enough SP!\n", user.getName());
             return;
         }
 
-        if(s.isUsed()){
+        if (s.isUsed()) {
             return;
         }
-        //Calc dodgeRate and reduced it due to attacker's accuracy
+
+        // Calc dodgeRate and reduced it due to attacker's accuracy
         float rDodgeRate = target == null ? 0 : target.getDodgeRate() * (100f / (100f + user.getAccuracy()));
         float finalReceiverDodgeRate = MathUtils.clamp(rDodgeRate / 100f, 0f, 0.95f);
 
         int damage = s.getDamage();
 
-        if(user.getWeapon().getType().contentEquals("Super Light")){
+        if (user.getWeapon() != null && user.getWeapon().getType().contentEquals("Super Light")) {
             damage = s.getDamage() + EquipmentBehaviour.damageCalculate(user) + Math.round(user.getWis() / 10f);
         }
 
         int offsetA = 0, offsetD = 0;
-        if(isAllyTurn){
+        if (isAllyTurn) {
             offsetA = GameScreen.imageTile;
-        }else offsetD = GameScreen.imageTile;
+        } else offsetD = GameScreen.imageTile;
 
-        switch (s.getName()){
+        switch (s.getName()) {
             case "Fireball":
-                //check condition
-                if(user.getSkillPoint() >= s.getCost()){
-                    if(target == null) return;
+                if (user.getSkillPoint() >= s.getCost()) {
+                    if (target == null) return;
 
                     s.startCD();
                     user.reduceSP(s.getCost());
@@ -156,13 +152,14 @@ public class SkillManager {
                     System.out.printf("%s use FIRE BALL!\n", user.getName());
                     s.setUsed(true);
 
+                    Entity originalUser = user;
                     user = activeReflection(user, target);
-                    if(user != allies.get(userIndex)){
-                        target = allies.get(userIndex);
-                        if(isAllyTurn){
+                    if (user != originalUser) {
+                        target = originalUser;
+                        if (isAllyTurn) {
                             offsetA = 0;
                             offsetD = GameScreen.imageTile;
-                        }else {
+                        } else {
                             offsetA = GameScreen.imageTile;
                             offsetD = 0;
                         }
@@ -171,60 +168,53 @@ public class SkillManager {
 
                     LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#ffaf18")));
 
-
-                    if(MathUtils.randomBoolean(finalReceiverDodgeRate) ){
+                    if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
                         System.out.println(target.getName() + " dodge the Fire Ball!");
                         EntityRenderer.dodgeAnimation(target);
-                    }else{
+                    } else {
+                        // Reduce damage due to target Magic Defense
+                        int damageReduced = MathUtils.clamp(Math.round(damage * (1 - EquipmentBehaviour.magicDefCalculate(target) / 100f)), 0, 10000);
 
-                        //Reduce damage due to target Magic Defense
-                        int damageReduced = MathUtils.clamp( Math.round(damage * (1 - EquipmentBehaviour.magicDefCalculate(target) / 100f)), 0, 10000);
-
-                        //Reduce Damage due to Con
+                        // Reduce Damage due to Con
                         float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
                         damageReduced = MathUtils.clamp(Math.round(damageReduced * (1 - conPercent / 100f)), 0, 10000);
 
-                        EntityBehavior.reduceHP(target,damageReduced,DamageText.TypeText.IGNITED);
+                        EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.IGNITED);
 
                         EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "FIRE_BALL"));
 
-                        if(target.isAlive() && target.containStatus("IGNITED")){
+                        if (target.isAlive() && target.containStatus("IGNITED")) {
                             int amount = Math.round(target.getMaxHp() * 0.12f);
-                            EntityBehavior.reduceHP(target,amount,DamageText.TypeText.IGNITED);
-
+                            EntityBehavior.reduceHP(target, amount, DamageText.TypeText.IGNITED);
 
                             System.out.printf("SEVERED BURN! %s lost %d HP!\n", target.getName(), amount);
                             return;
                         }
                         target.addStatusCondition("IGNITED", s.getDuration());
                         System.out.printf("%s is on fire!\n", target.getName());
-
                     }
                 }
                 break;
+
             case "Thunderbolt":
-                //check condition
-                if(user.getSkillPoint() >= s.getCost()){
-                    if(target == null) return;
+                if (user.getSkillPoint() >= s.getCost()) {
+                    if (target == null) return;
 
                     s.startCD();
                     user.reduceSP(s.getCost());
 
                     System.out.printf("%s use Thunderbolt!\n", user.getName());
 
-
-                    List<Entity> entityList = enemies;
-
+                    Entity originalUser = user;
                     user = activeReflection(user, target);
-                    if(user != allies.get(userIndex)){
-                        entityList = allies;
-                        target = allies.get(userIndex);
+                    if (user != originalUser) {
+                        target = originalUser;
                         finalReceiverDodgeRate = 0;
 
-                        if(isAllyTurn){
+                        if (isAllyTurn) {
                             offsetA = 0;
                             offsetD = GameScreen.imageTile;
-                        }else {
+                        } else {
                             offsetA = GameScreen.imageTile;
                             offsetD = 0;
                         }
@@ -232,43 +222,30 @@ public class SkillManager {
 
                     LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#18fffe")));
 
-                    for(Entity e : entityList){
-                        if(!e.isAlive()) continue;
+                    if (target.isAlive()) {
+                        if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
+                            System.out.println(target.getName() + " dodge the Thunderbolt!");
+                            EntityRenderer.dodgeAnimation(target);
+                        } else {
+                            float mDefPercent = EquipmentBehaviour.magicDefCalculate(target) / 100f;
+                            float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 40.f) / 100f;
 
-                        if(MathUtils.randomBoolean(finalReceiverDodgeRate) ) {
-                            System.out.println(e.getName() + " dodge the Thunderbolt!");
-                            EntityRenderer.dodgeAnimation(e);
-                            continue;
-                        }
+                            int damageReduced = MathUtils.clamp(Math.round(damage * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                        boolean isMainTarget = (e == target);
-                        float damageMultiplier = isMainTarget ? 1.0f : 0.45f;
+                            EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.PARALYZE);
 
-                        float mDefPercent = EquipmentBehaviour.magicDefCalculate(e) / 100f;
-                        float conPercent = Math.min(Entity.calculateStats(e.getCon(), 0.25f), 40.f) / 100f;
+                            EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THUNDERBOLT"));
 
-                        //Base damage
-                        int rawDamage = Math.round(damage * damageMultiplier);
-                        int damageReduced = MathUtils.clamp(Math.round(rawDamage * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
+                            // FULMINATION
+                            if (target.isAlive() && target.containStatus("PARALYZED")) {
+                                float hpPercent = 0.10f;
+                                int fulminationDamage = Math.round((target.getMaxHp() * hpPercent) * (1 - mDefPercent));
 
-                        EntityBehavior.reduceHP(e,damageReduced,DamageText.TypeText.PARALYZE);
-
-                        EffectRenderer.effectsAnim.add(new Effect(e.getX(), e.getY(), "THUNDERBOLT"));
-
-                        //FULMINATION
-
-                        if(e.isAlive() && e.containStatus("PARALYZED")){
-                            float hpPercent = isMainTarget ? 0.10f : 0.05f;
-
-                            //DAMAGE
-                            int fulminationDamage = Math.round((e.getMaxHp() * hpPercent) * (1 - mDefPercent));
-
-                            EntityBehavior.reduceHP(e,fulminationDamage,DamageText.TypeText.PARALYZE);
-
-
-                        }else {
-                            e.addStatusCondition("PARALYZED", s.getDuration());
-                            System.out.printf("%s was struck by a thunderbolt for %d damage!\n", e.getName(), damageReduced);
+                                EntityBehavior.reduceHP(target, fulminationDamage, DamageText.TypeText.PARALYZE);
+                            } else {
+                                target.addStatusCondition("PARALYZED", s.getDuration());
+                                System.out.printf("%s was struck by a thunderbolt for %d damage!\n", target.getName(), damageReduced);
+                            }
                         }
                     }
                     s.setUsed(true);
@@ -278,61 +255,17 @@ public class SkillManager {
             case "Self Heal":
                 s.startCD();
                 user.reduceSP(s.getCost());
-
                 s.setUsed(true);
 
                 user.increaseHP(damage);
 
                 DamageText.createDamageText(damage, DamageText.TypeText.HEAL, user.getX(), user.getY());
-
                 user.setAlreadyAttack(true);
 
                 System.out.printf("%s use Self Heal and healed for %d HP!\n", user.getName(), damage);
-
                 EffectRenderer.effectsAnim.add(new Effect(user.getX(), user.getY(), "SELF_HEAL"));
                 break;
-//            case "Nuclear Magic":
-//                if(target == null) return;
-//
-//                s.startCD();
-//                user.reduceSP(s.getCost());
-//
-//                System.out.printf("%s use Nuclear Magic!\n", user.getName());
-//
-//                LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#000000")));
-//
-//                for(Entity e : enemies){
-//                    if(!e.isAlive()) continue;
-//
-//                    if(MathUtils.randomBoolean(finalReceiverDodgeRate) ) {
-//                        System.out.println(e.getName() + " dodged the " + e.getName() + "'s attack!");
-//                        e.
-//                        continue;
-//                    }
-//
-//
-//                    e.reduceHP(damage * 100, DamageText.TypeText.PARALYZE);
-//                    GameScreen.effectsAnim.add(new Effect(e.getX(), e.getY(), "FIRE_BALL"));
-//                }
-//
-//                for(Entity e : allies){
-//
-//                    if(!e.isAlive() || e == user) continue;
-//
-//                    if(MathUtils.randomBoolean(finalReceiverDodgeRate) ) {
-//                        System.out.println(e.getName() + " dodged the " + e.getName() + "'s attack!");
-//                        e.dodgeAnimation();
-//                        continue;
-//                    }
-//
-//
-//                    e.reduceHP(damage * 100, DamageText.TypeText.PARALYZE);
-//                    GameScreen.effectsAnim.add(new Effect(e.getX(), e.getY(), "FIRE_BALL"));
-//                }
-//
-//                s.setUsed(true);
-//
-//                break;
+
             case "Buff Str":
                 s.startCD();
                 user.reduceSP(s.getCost());
@@ -343,15 +276,14 @@ public class SkillManager {
                 int amountBC = Math.round(user.getStr() * 0.55f);
 
                 EntityBehavior.statsChanged(user, "STR", amountBC);
-
                 user.addStatusCondition("STR_BUFFED " + amountBC, s.getDuration());
 
                 DamageText.createDamageText(amountBC, DamageText.TypeText.BLEED, user.getX(), user.getY());
-
                 user.setAlreadyAttack(true);
 
                 System.out.printf("%s use BUFF Strength increases it for %d!\n", user.getName(), amountBC);
                 break;
+
             case "Quick Snap":
                 s.startCD();
                 user.reduceSP(s.getCost());
@@ -361,34 +293,28 @@ public class SkillManager {
                 user.setAlreadyAttack(true);
 
                 System.out.printf("%s use QUICK SNAP!\n", user.getName());
-                for(Entity e : enemies){
-                    if(!e.isAlive()) continue;
+                if (target != null && target.isAlive()) {
+                    target.addStatusCondition("SILENCE", s.getDuration());
 
-                    e.addStatusCondition("SILENCE", s.getDuration());
+                    float mDefPercent = EquipmentBehaviour.magicDefCalculate(target) / 100f;
+                    float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 40.f) / 100f;
 
-                    float mDefPercent = EquipmentBehaviour.magicDefCalculate(e) / 100f;
-                    float conPercent = Math.min(Entity.calculateStats(e.getCon(), 0.25f), 40.f) / 100f;
-
-                    //Base damage;
                     int damageReduced = MathUtils.clamp(Math.round(100 * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                    EntityBehavior.reduceHP(e, damageReduced, DamageText.TypeText.CRIT);
-                    System.out.printf("%s lost %d HP!\n", e.getName(), damageReduced);
+                    EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.CRIT);
+                    System.out.printf("%s lost %d HP!\n", target.getName(), damageReduced);
 
-                    int amountQS = Math.round(e.getDex() * 0.95f);
+                    int amountQS = Math.round(target.getDex() * 0.95f);
 
-                    EntityBehavior.statsChanged(user, "DEX", -amountQS);
-                    user.addStatusCondition("DEX_REDUCE " + amountQS, s.getDuration());
-                    System.out.printf("%s lost %d DEX!\n", e.getName(), amountQS);
-
+                    EntityBehavior.statsChanged(target, "DEX", -amountQS);
+                    target.addStatusCondition("DEX_REDUCE " + amountQS, s.getDuration());
+                    System.out.printf("%s lost %d DEX!\n", target.getName(), amountQS);
                 }
-
                 break;
+
             //================================================Physical===========================================================//
             case "Iaido":
-                //Ignoring physical Def
-
-                if(target == null) return;
+                if (target == null) return;
 
                 s.startCD();
                 s.setUsed(true);
@@ -396,14 +322,15 @@ public class SkillManager {
 
                 System.out.printf("%s use Iaido!\n", user.getName());
 
+                Entity originalUserIaido = user;
                 user = activeReflection(user, target);
-                if(user != allies.get(userIndex)){
-                    target = allies.get(userIndex);
+                if (user != originalUserIaido) {
+                    target = originalUserIaido;
                     finalReceiverDodgeRate = 0;
-                    if(isAllyTurn){
+                    if (isAllyTurn) {
                         offsetA = 0;
                         offsetD = GameScreen.imageTile;
-                    }else {
+                    } else {
                         offsetA = GameScreen.imageTile;
                         offsetD = 0;
                     }
@@ -411,15 +338,14 @@ public class SkillManager {
 
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#b0b0b0")));
 
-                if(MathUtils.randomBoolean(finalReceiverDodgeRate) ){
+                if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
                     System.out.println(target.getName() + " dodge the Iaido!");
                     EntityRenderer.dodgeAnimation(target);
-                }else{
+                } else {
                     user.setAlreadyAttack(true);
 
                     int physicalDamage = Math.round((EquipmentBehaviour.damageCalculate(user) + damage * 1.7f + user.getStr() * 0.45f + EquipmentBehaviour.physicalDefCalculate(target) * 0.5f));
 
-                    //Reduce Damage due to Con
                     float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
                     int damageReduced = MathUtils.clamp(Math.round(physicalDamage * (1 - conPercent / 100f)), 0, 10000);
                     System.out.printf("Iaido deal %d damage to %s!\n", damageReduced, target.getName());
@@ -428,18 +354,17 @@ public class SkillManager {
 
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "IAIDO"));
 
-                    if(target.isAlive() && target.containStatus("BLEED")){
+                    if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
                         EntityBehavior.reduceHP(target, amount, DamageText.TypeText.CRIT);
-
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
                 }
                 break;
+
             case "Reflection":
-                //Ignoring physical Def
                 s.startCD();
                 s.setUsed(true);
                 user.reduceSP(s.getCost());
@@ -450,8 +375,8 @@ public class SkillManager {
                 EffectRenderer.effectsAnim.add(new Effect(user.getX(), user.getY(), "REFLECT"));
                 user.addStatusCondition("Reflection", s.getDuration());
                 break;
+
             case "Thrust":
-                //Ignoring physical Def
                 s.startCD();
                 s.setUsed(true);
                 user.reduceSP(s.getCost());
@@ -459,14 +384,15 @@ public class SkillManager {
                 System.out.printf("%s use Thrust!\n", user.getName());
                 user.setAlreadyAttack(true);
 
+                Entity originalUserThrust = user;
                 user = activeReflection(user, target);
-                if(user != allies.get(userIndex)){
-                    target = allies.get(userIndex);
+                if (user != originalUserThrust) {
+                    target = originalUserThrust;
                     finalReceiverDodgeRate = 0;
-                    if(isAllyTurn){
+                    if (isAllyTurn) {
                         offsetA = 0;
                         offsetD = GameScreen.imageTile;
-                    }else {
+                    } else {
                         offsetA = GameScreen.imageTile;
                         offsetD = 0;
                     }
@@ -474,55 +400,47 @@ public class SkillManager {
 
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#b0b0b0")));
 
-                if(MathUtils.randomBoolean(finalReceiverDodgeRate) ){
+                if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
                     System.out.println(target.getName() + " dodge the Thrust!");
-
                     EntityRenderer.dodgeAnimation(target);
-                }else{
+                } else {
                     user.setAlreadyAttack(true);
 
                     int physicalDamage = Math.round((EquipmentBehaviour.damageCalculate(user) + damage * 1.7f + user.getStr() * 0.45f + user.getDex() * 0.75f));
 
-                    //check this attack is Crit or not
-                    float critChance = MathUtils.clamp( user.getCritRate() / 100f + 0.3f, 0, 1);
+                    float critChance = MathUtils.clamp(user.getCritRate() / 100f + 0.3f, 0, 1);
                     boolean isCrit = false;
 
-                    if(MathUtils.randomBoolean(critChance)){
+                    if (MathUtils.randomBoolean(critChance)) {
                         physicalDamage = Math.round(physicalDamage * (user.getCritBuffer() / 100f));
                         isCrit = true;
                     }
 
-                    //Reduce Damage due to Physical Def
-                    physicalDamage = MathUtils.clamp( Math.round(physicalDamage * (1 - EquipmentBehaviour.physicalDefCalculate(target) / 100f)), 0, 10000);
-                    //Reduce Damage due to Con
+                    physicalDamage = MathUtils.clamp(Math.round(physicalDamage * (1 - EquipmentBehaviour.physicalDefCalculate(target) / 100f)), 0, 10000);
                     float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
                     int damageReduced = MathUtils.clamp(Math.round(physicalDamage * (1 - conPercent / 100f)), 0, 10000);
 
-
-                    if(isCrit){
+                    if (isCrit) {
                         System.out.printf("CRITICAL! Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
                         EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.CRIT);
-                    }else {
+                    } else {
                         System.out.printf("Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
                         EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.PHYSICAL);
-
                     }
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THRUST"));
 
-                    if(target.isAlive() && target.containStatus("BLEED")){
+                    if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
                         EntityBehavior.reduceHP(target, amount, DamageText.TypeText.CRIT);
-
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
                 }
                 break;
         }
-
     }
 
     public static Skill getRandomActiveSkill(List<Skill> listed){

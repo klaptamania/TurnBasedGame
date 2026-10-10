@@ -41,7 +41,7 @@ public class Skill implements Gacha {
     }
 
     public int getCooldown() {
-        return cooldown;
+        return cooldown + 1;
     }
 
     public boolean isUsed() {
@@ -60,7 +60,7 @@ public class Skill implements Gacha {
 
     //
 
-    public void startCD() { cdLeft = cooldown; }
+    public void startCD() { cdLeft = cooldown + 1; }
 
     public void onCD() {
         if(!used) return;

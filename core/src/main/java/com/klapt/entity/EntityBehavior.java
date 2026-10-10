@@ -67,6 +67,8 @@ public class EntityBehavior {
             finalReceiverDodgeRate = 0;
         }
 
+        LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f , user.getY() + offsetA, receiver.getX() + GameScreen.imageTile / 2f, receiver.getY() + offsetD, 2f, new Color(1,0,0,1)));
+
         if(MathUtils.randomBoolean(finalReceiverDodgeRate)){
             System.out.println(receiver.getName() + " dodged the " + user.getName() + "'s attack!");
             EntityRenderer.dodgeAnimation(receiver);
@@ -206,4 +208,6 @@ public class EntityBehavior {
                 break;
         }
     }
+    public static void regenSP(Entity entity) { entity.skillPoint = Math.min(entity.skillPoint + entity.spRegen, entity.maxSkillPoint); }
+
 }

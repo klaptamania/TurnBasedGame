@@ -14,9 +14,10 @@
     "Json/Armor/Body/IronChestplate.json",
     "Json/Armor/Head/IronHelm.json",
     "Json/Armor/Leg/IronLeggings.json",
-    "Json/Armor/Feet/IronBoots.json"
+    "Json/Armor/Feet/IronBoots.json",
+    "Json/Armor/Arm/IronGauntlet.json"
   ],
-  "weaponPath": "Json/Weapon/Heavy/ButcherSword.json",
+  "weaponPath": "Json/Weapon/Medium/StraightSword.json",
   "passivePath": "Json/Skill/PASSIVE_Revive.json",
   "activeSkillPaths": [
     "Json/Skill/ACTIVE_BuffStr.json",

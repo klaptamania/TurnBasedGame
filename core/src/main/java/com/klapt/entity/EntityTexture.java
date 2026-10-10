@@ -7,7 +7,7 @@ import com.klapt.main.Main;
 public class EntityTexture {
     Texture texture;
     Texture weapon;
-    Item[] armor = new Item[4];
+    Item[] armor = new Item[5];
 
     public Texture getTexture() {
         return texture;
@@ -26,7 +26,7 @@ public class EntityTexture {
 
         weapon = Main.getAm().getTexture(weaponName);
 
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < 5; i++){
             armor[i] = items[i];
         }
     }
