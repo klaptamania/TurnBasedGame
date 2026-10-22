@@ -89,7 +89,7 @@ public class EquipmentBehaviour {
         };
     }
 
-    static int scaleCalculator(int value, String scale){
+    public static int scaleCalculator(int value, String scale){
         return Math.round(value * scaleConverter(scale));
     }
 }

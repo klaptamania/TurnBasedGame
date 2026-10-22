@@ -1,5 +1,6 @@
 package com.klapt.manager;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -28,7 +29,13 @@ public class SkillSelectionTable extends Table {
 
         for(Skill s : skillLst){
             Stack stack = new Stack();
-            Button button = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("Temper"))));
+            String textureName = user.getAllSkill().get(counter).getName() + "Icon";
+            Button button = new ImageButton(new TextureRegionDrawable(
+                Main.getAm().textureContain(textureName) ?
+                    new TextureRegion(Main.getAm().getTexture(textureName)) :
+                    new TextureRegion(Main.getAm().getTexture("Temper"))
+            ));
+
 
             int finalCounter = counter;
             stack.add(button);

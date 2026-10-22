@@ -1,0 +1,8 @@
+{
+  "name": "Counter Attack",
+  "duration": 0,
+  "chance": 100,
+  "damage": 0,
+  "cooldown": 2,
+  "cost": 2
+}

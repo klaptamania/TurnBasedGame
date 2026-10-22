@@ -4,5 +4,8 @@
   "chance": 100,
   "damage": 30,
   "cooldown": 3,
+  "skillCastSpeed": 0.97,
+  "skillActionTime": 0.05,
+  "skillRecoverTime": 0.45,
   "cost": 45
 }

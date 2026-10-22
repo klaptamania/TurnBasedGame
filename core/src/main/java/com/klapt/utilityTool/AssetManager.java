@@ -3,14 +3,16 @@ package com.klapt.utilityTool;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import lombok.Getter;
 
 import java.util.HashMap;
 
 public class AssetManager {
     HashMap<String, Texture> textures = new HashMap<>();
+    @Getter
     Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
 
-    public AssetManager(){
+    private AssetManager(){
         getAllTexture();
     }
 
@@ -63,18 +65,36 @@ public class AssetManager {
         //UI
         textures.put("HealthGrayBar", new Texture(Gdx.files.internal("Image/UI/grayHealthBar.png")));
         textures.put("HealthBar", new Texture(Gdx.files.internal("Image/UI/healthBar.png")));
+        textures.put("AttackIcon", new Texture(Gdx.files.internal("Image/UI/Icon/AttackIcon.png")));
+        textures.put("SkillsIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon.png")));
+        textures.put("WaitingIcon", new Texture(Gdx.files.internal("Image/UI/Icon/WaitingIcon.png")));
+        textures.put("ThrustIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/ThrustIcon.png")));
+        textures.put("ThunderboltIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/ThunderboltIcon.png")));
+        textures.put("FireballIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/FireballIcon.png")));
+        textures.put("IaidoIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/IaidoIcon.png")));
+        textures.put("ReflectionIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/Reflect.png")));
     }
 
     public Texture getTexture(String name){
         return textures.get(name);
     }
-    public Skin getSkin() {return skin;}
+
+    private static AssetManager instance = null;
+    public static AssetManager getInstance(){
+        if(instance == null){
+            instance = new AssetManager();
+        }
+
+        return instance;
+    }
 
     public void dispose(){
-        for(var t : textures.values()){
+        for(var t : instance.textures.values()){
             t.dispose();
         }
 
         skin.dispose();
     }
+
+    public boolean textureContain(String name){ return textures.containsKey(name);}
 }

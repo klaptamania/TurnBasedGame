@@ -23,15 +23,15 @@ public class MoveSetTable extends Table {
 
         button = new Button[4];
 
-        button[0] = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("Person"))));
+        button[0] = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("AttackIcon"))));
         button[0].addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y){
                 user.setMove("Attack");
-                manager.executePlayerAttack();
+                manager.executeNormalMove();
             }
         });
-        button[1] = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("Person"))));
+        button[1] = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("SkillsIcon"))));
         button[1].addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y){
@@ -39,9 +39,17 @@ public class MoveSetTable extends Table {
                 manager.setPlayerMoveSkillAct();
             }
         });
+        button[2] = new ImageButton(new TextureRegionDrawable(new TextureRegion(Main.getAm().getTexture("WaitingIcon"))));
+        button[2].addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                user.setMove("Waiting");
+                manager.executeNormalMove();
+            }
+        });
 
-
-        this.add(button[0]).size(64, 64).pad(15);
-        this.add(button[1]).size(64, 64).pad(15);
+        for (Button butt : button) {
+            if (butt != null) this.add(butt).size(64, 64).pad(15);
+        }
     }
 }

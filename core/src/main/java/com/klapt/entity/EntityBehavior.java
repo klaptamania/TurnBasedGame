@@ -15,7 +15,15 @@ import java.util.HashMap;
 
 public class EntityBehavior {
 
-    public static void reduceHP(Entity entity, int amount, DamageText.TypeText type){
+    public static void reduceHP(Entity entity, Entity source,int amount, DamageText.TypeText type){
+        if(entity.containStatus("CounterAttack") && source != null){
+            System.out.println("COUNTER ATTACK!");
+            entity.setAlreadyAttack(false);
+            attack(entity,source, false);
+            entity.setAlreadyAttack(false);
+            amount = Math.round(amount * 0.5f);
+        }
+
         entity.setHp(Math.max(0, entity.getHp() - amount));
         entity.setBeingHit(true);
         DamageText.createDamageText(amount, type, entity.x, entity.y + GameScreen.imageTile);
@@ -29,7 +37,6 @@ public class EntityBehavior {
                 if(entity.getHp() != 0){return;}
             }
 
-            entity.callOfDeath();
             System.out.println(entity.getName() + " fainted.");
         }
     }
@@ -69,7 +76,7 @@ public class EntityBehavior {
 
         LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f , user.getY() + offsetA, receiver.getX() + GameScreen.imageTile / 2f, receiver.getY() + offsetD, 2f, new Color(1,0,0,1)));
 
-        if(MathUtils.randomBoolean(finalReceiverDodgeRate)){
+        if(MathUtils.randomBoolean(finalReceiverDodgeRate) && !receiver.containStatus("Reflection") && !receiver.containStatus("CounterAttack")){
             System.out.println(receiver.getName() + " dodged the " + user.getName() + "'s attack!");
             EntityRenderer.dodgeAnimation(receiver);
             user.setAttackHit(false);
@@ -96,11 +103,11 @@ public class EntityBehavior {
 
             if(isCrit){
                 //Lost HP due to Reduced Damage
-                reduceHP(receiver, damageReduced, DamageText.TypeText.CRIT);
+                reduceHP(receiver, user,damageReduced, DamageText.TypeText.CRIT);
                 System.out.println("CRITICAL! " + user.getName() + " attack " + receiver.getName() + " for " + damageReduced + " damage!");
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f , user.getY() + offsetA, receiver.getX() + GameScreen.imageTile / 2f, receiver.getY() + offsetD, 2f, new Color(1,0,0,1)));
             }else{
-                reduceHP(receiver, damageReduced, DamageText.TypeText.NORMAL);
+                reduceHP(receiver, user,damageReduced, DamageText.TypeText.NORMAL);
                 System.out.println(user.getName() + " attack " + receiver.getName() + " for " + damageReduced + " damage!");
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f , user.getY() + offsetA, receiver.getX() + GameScreen.imageTile / 2f, receiver.getY() + offsetD, 2f, new Color(1,1,1,1)));
             }
@@ -122,7 +129,7 @@ public class EntityBehavior {
             //Reduce duration
             int duration = status.get(name) - 1;
             status.put(name, duration);
-            if(duration == 0){
+            if(duration <= 0){
                 entity.addRemoveKeySet(name);
             }
             int amount = 0;
@@ -133,7 +140,7 @@ public class EntityBehavior {
                     amount = Math.round(entity.getMaxHp() * 0.03f);
 //                    System.out.println(getName() + " lost " + amount + " due to BLEED (" + duration + " turns left)");
                     System.out.printf("%s lost %d HP due to BLEED (%d turns left).\n", entity.getName(), amount, duration);
-                    reduceHP(entity, amount, DamageText.TypeText.BLEED);
+                    reduceHP(entity, null,amount, DamageText.TypeText.BLEED);
 
                     EffectRenderer.effectsAnim.add(new Effect(entity.getX(), entity.getY(), "BLEED"));
 
@@ -144,7 +151,7 @@ public class EntityBehavior {
                     amount = Math.round(entity.getMaxHp() * 0.08f);
 
                     System.out.printf("%s lost %d HP from FIRE (%d turns left)\n", entity.getName(), amount, duration);
-                    reduceHP(entity, amount, DamageText.TypeText.IGNITED);
+                    reduceHP(entity, null,amount, DamageText.TypeText.IGNITED);
                     EffectRenderer.effectsAnim.add(new Effect(entity.getX(), entity.getY(), "IGNITED"));
 
                     break;

@@ -17,5 +17,23 @@
   "activeSkillPaths": [
     "Json/Skill/ACTIVE_Fireball.json",
     "Json/Skill/ACTIVE_Thunderbolt.json"
+  ],
+  "moves": [
+    {
+      "name": "Attack",
+      "moveWeight" : 30
+    },
+    {
+      "name": "Waiting",
+      "moveWeight": 10
+    },
+    {
+      "name": "0",
+      "moveWeight": 50
+    },
+    {
+      "name": "1",
+      "moveWeight": 70
+    }
   ]
 }

@@ -7,11 +7,13 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.klapt.main.GameScreen;
 import com.klapt.main.Main;
 import com.klapt.skill.Skill;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Item implements Json.Serializable{
+@Getter
+public class Item implements Json.Serializable {
     //=================Require===============//
     private int requiredCon, requiredDex, requiredInt, requiredStr, requiredWis;
     private String conScale, dexScale, intScale, strScale, wisScale;
@@ -34,35 +36,6 @@ public class Item implements Json.Serializable{
     Skill passive;
     List<Skill> activeSkill = new ArrayList<>();
 
-    //Getter
-    public String getName() { return name; }
-    public int getBaseDamage() { return baseDamage; }
-    public int getRequiredCon() { return requiredCon; }
-    public int getRequiredDex() { return requiredDex; }
-    public int getRequiredInt() { return requiredInt; }
-    public int getRequiredStr() { return requiredStr; }
-    public int getRequiredWis() { return requiredWis; }
-
-    public String getType() { return type; }
-    public int getPhysicalDef() { return physicalDef; }
-    public int getMagicalDef() { return magicalDef; }
-    public Texture getTexture() { return texture; }
-
-    public String getConScale() {
-        return conScale;
-    }
-    public String getDexScale() {
-        return dexScale;
-    }
-    public String getIntScale() {
-        return intScale;
-    }
-    public String getStrScale() {
-        return strScale;
-    }
-    public String getWisScale() {
-        return wisScale;
-    }
 
     @Override
     public void write(Json json) {
@@ -116,8 +89,7 @@ public class Item implements Json.Serializable{
         this.texture = Main.getAm().getTexture(this.name);
     }
 
-
-    public List<Skill> getActiveSkill() { return activeSkill; }
-
-    public boolean haveActiveSkill() { return !activeSkill.isEmpty(); }
+    public boolean haveActiveSkill() {
+        return !activeSkill.isEmpty();
+    }
 }

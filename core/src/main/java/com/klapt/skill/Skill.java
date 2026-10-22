@@ -1,72 +1,37 @@
 package com.klapt.skill;
 
 import com.klapt.interfacePack.Gacha;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class Skill implements Gacha {
     String name, effect, condition;
     float chance; //100f
+    float skillCastSpeed, skillCastNeed, skillRecoverTime;
     int duration;
-
     int damage;
-
     int cost;
-
-    boolean used = false;
     int cooldown, cdLeft = 0;
 
-    //Getter
+    @Setter
+    boolean used = false;
 
-    public String getName() {
-        return name;
-    }
-
-    public String getEffect() {
-        return effect;
-    }
-
-    public int getDamage() {
-        return damage;
-    }
-
-    public float getChance() {
-        return chance;
-    }
-
-    public String getCondition() {
-        return condition;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
 
     public int getCooldown() {
         return cooldown + 1;
     }
 
-    public boolean isUsed() {
-        return used;
+
+    public void startCD() {
+        cdLeft = cooldown + 1;
     }
-
-    public int getCdLeft() {
-        return cdLeft;
-    }
-
-    public int getCost() {
-        return  cost;
-    }
-
-    public void setUsed(boolean used) { this.used = used;}
-
-    //
-
-    public void startCD() { cdLeft = cooldown + 1; }
 
     public void onCD() {
-        if(!used) return;
+        if (!used) return;
 
         cdLeft--;
-        if(cdLeft == 0){
+        if (cdLeft == 0) {
             used = false;
         }
     }

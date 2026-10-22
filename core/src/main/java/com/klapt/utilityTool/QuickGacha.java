@@ -6,9 +6,8 @@ import com.klapt.interfacePack.Gacha;
 import java.util.List;
 
 public class QuickGacha<T extends Gacha> {
-    //SKills
-    private final List<T> list;
 
+    private final List<T> list;
 
     private final int[] cumulativeWeights;
     private final int totalWeight;

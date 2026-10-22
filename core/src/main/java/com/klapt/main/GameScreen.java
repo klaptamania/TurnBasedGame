@@ -36,11 +36,13 @@ public class GameScreen implements Screen {
     public GameScreen(Main main){
         batch = main.getBatch();
 
+        json.setIgnoreUnknownFields(true);
+
         cam = new OrthographicCamera();
         vp = new FitViewport(360, 640, cam);
         cm = new CombatManager(vp.getWorldWidth(), vp.getWorldHeight());
-        cm.addEntity(false, "Json/Entity/Sample/Samurai.json");
-        cm.addEntity(true, "Json/Entity/Sample/Dummy.json");
+        cm.addEntity(false, "Json/Entity/Sample/Wizard.json");
+        cm.addEntity(true, "Json/Entity/Sample/Wizard.json");
 
         TextDamageRenderer.loadFont(new Color(255,255,255,1));
         AnimationHolder.loadAllAnimations();
@@ -61,6 +63,7 @@ public class GameScreen implements Screen {
     public void resize(int width, int height) {
         vp.update(width, height, true);
         gHolder.resize(width, height);
+        cm.resize(width,height);
     }
 
     @Override

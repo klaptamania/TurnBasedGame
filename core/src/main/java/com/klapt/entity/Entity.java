@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.klapt.equipment.EquipmentBehaviour;
 import com.klapt.equipment.Item;
 import com.klapt.interfacePack.Gacha;
 import com.klapt.main.GameScreen;
@@ -15,8 +16,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@lombok.Data
 public class Entity implements Gacha {
     //==================Stats====================//
+
     int maxHp, hp;
     int con, dex, intel, str, wis;
     int conBonus, dexBonus, intelBonus, strBonus, wisBonus;
@@ -41,12 +44,16 @@ public class Entity implements Gacha {
 
     int index;
 
+    float skillCastSpeed;
+    float actionTime = 0;
+
+    boolean isSkillCasting = false;
+
     //================Equipment=================//
     Item weapon;
     Item[] armor = new Item[5];
 
     //=================Skill====================//
-
     Skill passive;
     List<Skill> activeSkill = new ArrayList<>();
     HashMap<String, Integer> status = new HashMap<>();
@@ -62,104 +69,121 @@ public class Entity implements Gacha {
     float stateCounter = 0;
     boolean attackAnimation = false;
 
+    public Entity() {
+        for (int i = 0; i < 5; i++) {
+            String name = "BA" + Integer.toString(i + 1);
+            frames[i] = new TextureRegion(Main.getAm().getTexture(name));
+        }
+
+        basicAttack = new Animation<TextureRegion>(0.155f, frames);
+    }
+
+    public static float calculateStats(int stat, float baseRate) {
+        if (stat <= 50) {
+            return stat * baseRate;
+        } else if (stat <= 100) {
+            return (50 * baseRate) + (stat - 50) * (baseRate / 2f);
+        } else {
+            return (50 * baseRate) + (50 * (baseRate / 2f)) + (stat - 100) * (baseRate / 4f);
+        }
+    }
+
     //==================Getters==================//
-    //Stats-----
-    public int getHp() { return hp; }
-    public void setHp(int amount) { hp = amount; }
-    public int getCon() { return con + conBonus; }
-    public int getDex() { return dex + dexBonus; }
-    public int getIntel() { return intel + intelBonus; }
-    public int getMaxHp() { return maxHp; }
-    public int getStr() { return str + strBonus; }
-    public int getWis() { return wis + wisBonus; }
+    public int getCon() {
+        return con + conBonus;
+    }
 
-    public void addStrBonus(int amount) { strBonus += amount;};
-    public void addDexBonus(int amount) { dexBonus += amount;};
-    public void addConBonus(int amount) { conBonus += amount;};
-    public void addWisBonus(int amount) { wisBonus += amount;};
-    public void addIntelBonus(int amount) { intelBonus += amount;};
+    public int getDex() {
+        return dex + dexBonus;
+    }
 
-    public int getStrBonus() { return strBonus; };
-    public int getDexBonus() { return dexBonus; };
+    public int getIntel() {
+        return intel + intelBonus;
+    }
 
-    public void setBeingHit(boolean state) { beingHit = state; }
-    public boolean isBeingHit() { return  beingHit; }
+    public int getStr() {
+        return str + strBonus;
+    }
 
-    //
-    public void setMove(String move) { this.move = move; }
-    public String getMove() { return move; }
+    public int getWis() {
+        return wis + wisBonus;
+    }
+
+    public void addStrBonus(int amount) {
+        strBonus += amount;
+    }
+
+    public void addDexBonus(int amount) {
+        dexBonus += amount;
+    }
+
+    public void addConBonus(int amount) {
+        conBonus += amount;
+    }
+
 
     //Condition
 
-    public void setPassiveActivated(boolean activated) { passiveActivated = activated; }
-    public boolean isPassiveActivated() { return passiveActivated; }
-
-    //Something else=---
-    public float getX() { return x; }
-    public float getY() { return y; }
-    public void setY(float y) {
-        this.y = y;
-    }
-    public void setX(float x) {
-        this.x = x;
+    public void addWisBonus(int amount) {
+        wisBonus += amount;
     }
 
-    public float getHurtCounter() { return hurtCounter; }
-    public void addHurtCounter(float amount) { hurtCounter += amount; }
+    public void addIntelBonus(int amount) {
+        intelBonus += amount;
+    }
 
-    public void setCastSkill(boolean casted) { castSkill = casted; }
-    public boolean isCastSkill() { return castSkill; }
+    public void addHurtCounter(float amount) {
+        hurtCounter += amount;
+    }
 
-    public HashMap<String, Integer> getStatus() { return status; }
+    public boolean containStatus(String name) {
+        return status.containsKey(name);
+    }
 
-    public Skill getPassive() { return passive ;}
-    public List<Skill> getActiveSkill() { return activeSkill; }
-    public boolean containStatus(String name) { return status.containsKey(name); }
+    public void addStatusCondition(String name, int duration) {
+        status.put(name, duration);
+    }
 
-    public boolean isAlreadyAttack() { return alreadyAttack; }
+    public boolean isRemoval() {
+        return !removeKeySet.isEmpty();
+    }
 
-    public void addStatusCondition(String name, int duration) { status.put(name, duration); }
-    public boolean isRemoval() { return !removeKeySet.isEmpty(); }
+    public void addRemoveKeySet(String name) {
+        removeKeySet.add(name);
+    }
 
-    public void addRemoveKeySet(String name) { removeKeySet.add(name); }
-    public List<String> getRemoveKeySet() { return removeKeySet; }
+    public EntityTexture getTexture() {
+        return entityTexture;
+    }
 
-    public EntityTexture getTexture() { return entityTexture; }
+    public void stunRecover() {
+        stunRecover(1);
+    }
 
-    public boolean isAlive() { return isAlive; }
+    public void stunRecover(int amount) {
+        stunned -= amount;
+    }
 
-    public int getStunned() { return stunned; }
-    public void setStunned(int duration) { stunned = duration; }
+    public void increaseHP(int amount) {
+        hp = Math.max(hp + amount, maxHp);
+    }
 
-    public void stunRecover() { stunRecover(1);}
-    public void stunRecover(int amount ) { stunned -= amount;}
+    public void callOfDeath() {
+        isAlive = false;
+    }
 
-    public String getName() { return name; }
+    public void reduceSP(int amount) {
+        skillPoint = Math.max(0, skillPoint - amount);
+    }
 
-    public Item getWeapon() { return weapon; }
-    public Item[] getArmor() { return armor; }
-
-    public void setAlreadyAttack(boolean attacked) { alreadyAttack = attacked; }
-    public void setAttackHit(boolean hit) { attackHit = hit; }
-    public boolean isAttackHit() { return attackHit; }
-
-    public void increaseHP(int amount){ hp = Math.max(hp + amount, maxHp); }
-
-    public void callOfDeath() { isAlive = false;}
-
-    public int getSkillPoint() { return skillPoint; }
-    public void reduceSP(int amount) { skillPoint = Math.max(0, skillPoint - amount); }
-
-    public int getIndex() { return  index; }
-
-    public int getAccuracy(){
+    public int getAccuracy() {
         float accuracy;
 
-        if(getDex() <= 50){
+        if (getDex() <= 50) {
             accuracy = getDex() * 0.6f;
-        }else if(getDex() <= 100){
+        } else if (getDex() <= 100) {
             accuracy = 50 * 0.6f + ((getDex() - 50) * 0.35f);
-        }else accuracy = (50 * 0.6f) + (50 * 0.35f) + ((getDex() - 100) * 0.2f);
+        } else accuracy = (50 * 0.6f) + (50 * 0.35f) + ((getDex() - 100) * 0.2f);
 
         return Math.round(accuracy);
     }
@@ -169,16 +193,6 @@ public class Entity implements Gacha {
         float intelCrit = calculateStats(getIntel(), 0.3f);
 
         return Math.min(Math.round(dexCrit + intelCrit), 95);
-    }
-
-    public  static float calculateStats(int stat, float baseRate) {
-        if (stat <= 50) {
-            return stat * baseRate;
-        } else if (stat <= 100) {
-            return (50 * baseRate) + (stat - 50) * (baseRate / 2f);
-        } else {
-            return (50 * baseRate) + (50 * (baseRate / 2f)) + (stat - 100) * (baseRate / 4f);
-        }
     }
 
     public int getCritBuffer() {
@@ -193,7 +207,7 @@ public class Entity implements Gacha {
         return Math.round(totalMultiplier);
     }
 
-    public int getDodgeRate(){
+    public int getDodgeRate() {
         float dodgeRate = calculateStats(getDex(), 0.65f);
         float weightPenalty = Math.max(0.2f, 1.0f - (getCon() * 0.0025f));
 
@@ -202,28 +216,8 @@ public class Entity implements Gacha {
         return Math.min(Math.round(finalDodge), 95);
     }
 
-
-    public void setStateCounter(float amount){ stateCounter = amount; }
-    public float getStateCounter(){ return stateCounter; }
-
-    public void setAttackAnimation(boolean set) {
-        attackAnimation = set;
-    }
-    public boolean isAttackAnimation() { return attackAnimation; }
-
-    public Animation<TextureRegion> getBasicAttack() { return basicAttack; }
-
-    public void skillActivation(List<Entity> allies, List<Entity> enemies, int userIndex, boolean isAllyTurn){
+    public void skillActivation(List<Entity> allies, List<Entity> enemies, int userIndex, boolean isAllyTurn) {
 //        SkillManager.skillActivation(allies, enemies, userIndex, isAllyTurn);
-    }
-
-    public Entity(){
-        for(int i = 0; i < 5; i++){
-            String name = "BA" + Integer.toString(i + 1);
-            frames[i] = new TextureRegion(Main.getAm().getTexture(name));
-        }
-
-        basicAttack = new Animation<TextureRegion>(0.155f, frames);
     }
 
     public void load(int index) {
@@ -285,9 +279,49 @@ public class Entity implements Gacha {
         skillPoint = maxSkillPoint;
 
         spRegen += Math.round(intel / 10f);
+
+        //Setup SkillCasting Speed due to percent
+
+        if(!EquipmentBehaviour.checkItemRequire(this, this.getWeapon())){
+            skillCastSpeed = 1.1f;
+            return;
+        }
+
+        float percent = 0;
+        for(int i = 0; i < 5; i++){
+            switch (i){
+                case 0:
+                    if(!this.getWeapon().getStrScale().contentEquals("--")){
+                        percent += EquipmentBehaviour.scaleCalculator(this.getStr(), this.getWeapon().getStrScale());
+                    }
+                    break;
+                case 1:
+                    if(!this.getWeapon().getDexScale().contentEquals("--")){
+                        percent += EquipmentBehaviour.scaleCalculator(this.getDex(), this.getWeapon().getDexScale());
+                    }
+                    break;
+                case 2:
+                    if(!this.getWeapon().getIntScale().contentEquals("--")){
+                        percent += EquipmentBehaviour.scaleCalculator(this.getIntel(), this.getWeapon().getIntScale());
+                    }
+                    break;
+                case 3:
+                    if(!this.getWeapon().getConScale().contentEquals("--")){
+                        percent += EquipmentBehaviour.scaleCalculator(this.getCon(), this.getWeapon().getConScale());
+                    }
+                    break;
+                case 4:
+                    if(!this.getWeapon().getWisScale().contentEquals("--")){
+                        percent += EquipmentBehaviour.scaleCalculator(this.getWis(), this.getWeapon().getWisScale());
+                    }
+                    break;
+            }
+
+            skillCastSpeed = (100 - percent) / 100f;
+        }
     }
 
-    public void removeStatus(String name){
+    public void removeStatus(String name) {
         status.remove(name);
     }
 

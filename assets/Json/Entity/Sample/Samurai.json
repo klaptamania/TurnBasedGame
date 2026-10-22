@@ -10,5 +10,28 @@
   "skillPoint": 100,
   "spRegen": 50,
   "textureName": "Person",
-  "weaponPath": "Json/Weapon/Medium/Katana.json"
+  "weaponPath": "Json/Weapon/Medium/Katana.json",
+  "activeSkillPaths": ["Json/Skill/ACTIVE_CounterAttack.json"],
+  "moves": [
+    {
+      "name": "Attack",
+      "moveWeight" : 30
+    },
+    {
+      "name": "Waiting",
+      "moveWeight": 10
+    },
+    {
+      "name": "0",
+      "moveWeight": 100
+    },
+    {
+      "name": "1",
+      "moveWeight": 70
+    },
+    {
+      "name" : "2",
+      "moveWeight": 50
+    }
+  ]
 }

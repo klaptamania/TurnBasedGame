@@ -39,7 +39,7 @@ public class SkillManager {
                 if(user.isAttackHit()){
                     if(enemy.containStatus(skill)){ //if enemy already BLEED, take extra damaged
                         int amount = Math.round(enemy.getMaxHp() * 0.10f);
-                        EntityBehavior.reduceHP(enemy,amount,DamageText.TypeText.BLEED);
+                        EntityBehavior.reduceHP(enemy, user,amount,DamageText.TypeText.BLEED);
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", enemy.getName(), amount);
                         EffectRenderer.effectsAnim.add(new Effect(enemy.getX(), enemy.getY(), "SEVERED_BLEED"));
                     }else{
@@ -168,7 +168,7 @@ public class SkillManager {
 
                     LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#ffaf18")));
 
-                    if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
+                    if (MathUtils.randomBoolean(finalReceiverDodgeRate) && !target.containStatus("Reflection") && !target.containStatus("CounterAttack")) {
                         System.out.println(target.getName() + " dodge the Fire Ball!");
                         EntityRenderer.dodgeAnimation(target);
                     } else {
@@ -179,13 +179,13 @@ public class SkillManager {
                         float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
                         damageReduced = MathUtils.clamp(Math.round(damageReduced * (1 - conPercent / 100f)), 0, 10000);
 
-                        EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.IGNITED);
+                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.IGNITED);
 
                         EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "FIRE_BALL"));
 
                         if (target.isAlive() && target.containStatus("IGNITED")) {
                             int amount = Math.round(target.getMaxHp() * 0.12f);
-                            EntityBehavior.reduceHP(target, amount, DamageText.TypeText.IGNITED);
+                            EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.IGNITED);
 
                             System.out.printf("SEVERED BURN! %s lost %d HP!\n", target.getName(), amount);
                             return;
@@ -223,7 +223,7 @@ public class SkillManager {
                     LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#18fffe")));
 
                     if (target.isAlive()) {
-                        if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
+                        if (MathUtils.randomBoolean(finalReceiverDodgeRate) && !target.containStatus("Reflection") && !target.containStatus("CounterAttack")) {
                             System.out.println(target.getName() + " dodge the Thunderbolt!");
                             EntityRenderer.dodgeAnimation(target);
                         } else {
@@ -232,7 +232,7 @@ public class SkillManager {
 
                             int damageReduced = MathUtils.clamp(Math.round(damage * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                            EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.PARALYZE);
+                            EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PARALYZE);
 
                             EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THUNDERBOLT"));
 
@@ -241,7 +241,7 @@ public class SkillManager {
                                 float hpPercent = 0.10f;
                                 int fulminationDamage = Math.round((target.getMaxHp() * hpPercent) * (1 - mDefPercent));
 
-                                EntityBehavior.reduceHP(target, fulminationDamage, DamageText.TypeText.PARALYZE);
+                                EntityBehavior.reduceHP(target, user,fulminationDamage, DamageText.TypeText.PARALYZE);
                             } else {
                                 target.addStatusCondition("PARALYZED", s.getDuration());
                                 System.out.printf("%s was struck by a thunderbolt for %d damage!\n", target.getName(), damageReduced);
@@ -301,7 +301,7 @@ public class SkillManager {
 
                     int damageReduced = MathUtils.clamp(Math.round(100 * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                    EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.CRIT);
+                    EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.CRIT);
                     System.out.printf("%s lost %d HP!\n", target.getName(), damageReduced);
 
                     int amountQS = Math.round(target.getDex() * 0.95f);
@@ -338,7 +338,7 @@ public class SkillManager {
 
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#b0b0b0")));
 
-                if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
+                if (MathUtils.randomBoolean(finalReceiverDodgeRate) && !target.containStatus("Reflection") && !target.containStatus("CounterAttack")) {
                     System.out.println(target.getName() + " dodge the Iaido!");
                     EntityRenderer.dodgeAnimation(target);
                 } else {
@@ -350,14 +350,14 @@ public class SkillManager {
                     int damageReduced = MathUtils.clamp(Math.round(physicalDamage * (1 - conPercent / 100f)), 0, 10000);
                     System.out.printf("Iaido deal %d damage to %s!\n", damageReduced, target.getName());
 
-                    EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.PHYSICAL);
+                    EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PHYSICAL);
 
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "IAIDO"));
 
                     if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
-                        EntityBehavior.reduceHP(target, amount, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.CRIT);
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
@@ -374,6 +374,16 @@ public class SkillManager {
 
                 EffectRenderer.effectsAnim.add(new Effect(user.getX(), user.getY(), "REFLECT"));
                 user.addStatusCondition("Reflection", s.getDuration());
+                break;
+
+            case "Counter Attack":
+                s.startCD();
+                s.setUsed(true);
+                user.reduceSP(s.getCost());
+                user.setAlreadyAttack(false);
+
+                EffectRenderer.effectsAnim.add(new Effect(user.getX(), user.getY(), "REFLECT"));
+                user.addStatusCondition("CounterAttack", s.getDuration());
                 break;
 
             case "Thrust":
@@ -400,7 +410,7 @@ public class SkillManager {
 
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#b0b0b0")));
 
-                if (MathUtils.randomBoolean(finalReceiverDodgeRate)) {
+                if (MathUtils.randomBoolean(finalReceiverDodgeRate) && !target.containStatus("Reflection") && !target.containStatus("CounterAttack")) {
                     System.out.println(target.getName() + " dodge the Thrust!");
                     EntityRenderer.dodgeAnimation(target);
                 } else {
@@ -423,18 +433,18 @@ public class SkillManager {
                     if (isCrit) {
                         System.out.printf("CRITICAL! Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
-                        EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.CRIT);
                     } else {
                         System.out.printf("Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
-                        EntityBehavior.reduceHP(target, damageReduced, DamageText.TypeText.PHYSICAL);
+                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PHYSICAL);
                     }
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THRUST"));
 
                     if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
-                        EntityBehavior.reduceHP(target, amount, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.CRIT);
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
