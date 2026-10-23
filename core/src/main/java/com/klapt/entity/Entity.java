@@ -47,7 +47,8 @@ public class Entity implements Gacha {
     float skillCastSpeed;
     float actionTime = 0;
 
-    boolean isSkillCasting = false;
+    public enum State {IDLE, CASTING, RECOVERY}
+    State currentState = State.IDLE;
 
     //================Equipment=================//
     Item weapon;
@@ -120,6 +121,8 @@ public class Entity implements Gacha {
     public void addConBonus(int amount) {
         conBonus += amount;
     }
+
+    public boolean isThisState(State state) { return currentState == state; }
 
 
     //Condition

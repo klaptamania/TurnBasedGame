@@ -2,19 +2,19 @@ package com.klapt.movement;
 
 import com.klapt.interfacePack.Gacha;
 
+@lombok.Data
 public class Move implements Gacha {
-    String name;
-    int moveWeight;
+    protected String name;
+    protected int moveWeight;
+    protected int damage;
+    protected float skillCastSpeed, skillCastNeed, skillRecoverTime;
+    protected int cooldown, cdLeft = 0;
 
     public Move(int moveWeight){
         this.moveWeight = moveWeight;
     }
 
     public Move(){}
-
-    public void setMoveWeight(int amount) { moveWeight = amount; }
-
-    public String getName() { return name; }
 
     @Override
     public int getWeight() {

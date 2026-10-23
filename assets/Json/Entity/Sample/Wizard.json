@@ -21,11 +21,11 @@
   "moves": [
     {
       "name": "Attack",
-      "moveWeight" : 30
+      "moveWeight" : 0
     },
     {
       "name": "Waiting",
-      "moveWeight": 10
+      "moveWeight": 0
     },
     {
       "name": "0",

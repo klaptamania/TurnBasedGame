@@ -1,18 +1,15 @@
 package com.klapt.skill;
 
-import com.klapt.interfacePack.Gacha;
+import com.klapt.movement.Move;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class Skill implements Gacha {
-    String name, effect, condition;
+public class Skill extends Move{
+    String effect, condition;
     float chance; //100f
-    float skillCastSpeed, skillCastNeed, skillRecoverTime;
     int duration;
-    int damage;
     int cost;
-    int cooldown, cdLeft = 0;
 
     @Setter
     boolean used = false;

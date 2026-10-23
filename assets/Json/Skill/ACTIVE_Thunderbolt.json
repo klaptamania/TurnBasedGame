@@ -5,7 +5,7 @@
   "damage": 30,
   "cooldown": 3,
   "skillCastSpeed": 0.97,
-  "skillActionTime": 0.05,
+  "skillCastNeed": 0.05,
   "skillRecoverTime": 0.45,
   "cost": 45
 }
