@@ -1,0 +1,9 @@
+{
+  "name": "Straight Punch",
+  "damage": 10,
+  "cooldown": 3,
+  "skillCastSpeed": 0.5,
+  "skillCastNeed": 0.25,
+  "skillRecoverTime": 0.25,
+  "type": "Move"
+}

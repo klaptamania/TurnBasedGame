@@ -18,7 +18,7 @@ public class AssetManager {
 
     private void getAllTexture() {
         textures.put("Temper", new Texture(Gdx.files.internal("Entity/temper.png")));
-        textures.put("Person", new Texture(Gdx.files.internal("Entity/person.png")));
+        textures.put("Person", new Texture(Gdx.files.internal("Entity/sad.png")));
         textures.put("BGTemper", new Texture(Gdx.files.internal("Background/psor.png")));
         textures.put("Bone", new Texture(Gdx.files.internal("Entity/bone.png")));
 
@@ -73,6 +73,10 @@ public class AssetManager {
         textures.put("FireballIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/FireballIcon.png")));
         textures.put("IaidoIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/IaidoIcon.png")));
         textures.put("ReflectionIcon", new Texture(Gdx.files.internal("Image/UI/Icon/SkillsIcon/Reflect.png")));
+
+        textures.put("SmashIcon", new Texture(Gdx.files.internal("Image/UI/Icon/MoveIcon/Smash.png")));
+        textures.put("Straight PunchIcon", new Texture(Gdx.files.internal("Image/UI/Icon/MoveIcon/straightPunch.png")));
+        textures.put("SweepIcon", new Texture(Gdx.files.internal("Image/UI/Icon/MoveIcon/Sweep.png")));
     }
 
     public Texture getTexture(String name){

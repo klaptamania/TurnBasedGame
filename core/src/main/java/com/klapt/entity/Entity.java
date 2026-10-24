@@ -1,7 +1,6 @@
 package com.klapt.entity;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.klapt.equipment.EquipmentBehaviour;
@@ -9,8 +8,8 @@ import com.klapt.equipment.Item;
 import com.klapt.interfacePack.Gacha;
 import com.klapt.main.GameScreen;
 import com.klapt.main.Main;
+import com.klapt.movement.Move;
 import com.klapt.skill.Skill;
-import com.klapt.manager.SkillManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ public class Entity implements Gacha {
     String passivePath;
     String[] armorPaths = new String[5];
     String[] activeSkillPaths = new String[5];
+    String[] moveSetPath = new String[5];
 
     EntityTexture entityTexture;
 
@@ -57,6 +57,7 @@ public class Entity implements Gacha {
     //=================Skill====================//
     Skill passive;
     List<Skill> activeSkill = new ArrayList<>();
+    List<Move> moveSet = new ArrayList<>();
     HashMap<String, Integer> status = new HashMap<>();
     List<String> removeKeySet = new ArrayList<>();
 
@@ -242,6 +243,13 @@ public class Entity implements Gacha {
             }
         }
 
+        if (moveSetPath != null) {
+            for (String activeMovePath : moveSetPath) {
+                if (activeMovePath == null || activeMovePath.isEmpty()) continue;
+                moveSet.add(GameScreen.json.fromJson(Move.class, Gdx.files.internal(activeMovePath)));
+            }
+        }
+
         if (armorPaths != null) {
             for (String armorPath : armorPaths) {
                 if (armorPath == null || armorPath.isEmpty()) continue;
@@ -342,5 +350,4 @@ public class Entity implements Gacha {
         }
         return skillLst;
     }
-
 }

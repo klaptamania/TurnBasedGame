@@ -4,10 +4,11 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.klapt.entity.Entity;
 import com.klapt.entity.EntityBehavior;
-import com.klapt.rendering.EffectRenderer;
-import com.klapt.rendering.EntityRenderer;
 import com.klapt.equipment.EquipmentBehaviour;
 import com.klapt.main.GameScreen;
+import com.klapt.movement.Move;
+import com.klapt.rendering.EffectRenderer;
+import com.klapt.rendering.EntityRenderer;
 import com.klapt.skill.Effect;
 import com.klapt.skill.Skill;
 import com.klapt.utilityTool.DamageText;
@@ -17,32 +18,32 @@ import com.klapt.utilityTool.QuickGacha;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SkillManager {
-    public static void passiveActivation(Entity user, Entity enemy){
+public class MoveManager {
+    public static void passiveActivation(Entity user, Entity enemy) {
         Skill ps = user.getPassive();
-        if(ps == null || ps.getName().contentEquals("")) return;
+        if (ps == null || ps.getName().contentEquals("")) return;
 
         String skill = ps.getName();
         int duration = ps.getDuration();
         float chance = ps.getChance() / 100f;
 
         //check if failed on inflict
-        if(!MathUtils.randomBoolean(chance)){
+        if (!MathUtils.randomBoolean(chance)) {
             return;
         }
 
         user.setPassiveActivated(true);
 
-        switch(skill){
+        switch (skill) {
             case "BLEED":
                 //Inflict BLEED on attack
-                if(user.isAttackHit()){
-                    if(enemy.containStatus(skill)){ //if enemy already BLEED, take extra damaged
+                if (user.isAttackHit()) {
+                    if (enemy.containStatus(skill)) { //if enemy already BLEED, take extra damaged
                         int amount = Math.round(enemy.getMaxHp() * 0.10f);
-                        EntityBehavior.reduceHP(enemy, user,amount,DamageText.TypeText.BLEED);
+                        EntityBehavior.reduceHP(enemy, user, amount, DamageText.TypeText.BLEED);
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", enemy.getName(), amount);
                         EffectRenderer.effectsAnim.add(new Effect(enemy.getX(), enemy.getY(), "SEVERED_BLEED"));
-                    }else{
+                    } else {
                         System.out.printf("%s bleeds for %d turns!\n", enemy.getName(), duration);
                         EffectRenderer.effectsAnim.add(new Effect(enemy.getX(), enemy.getY(), "BLEED"));
                     }
@@ -53,13 +54,13 @@ public class SkillManager {
                 break;
             case "STUN":
                 //Stun enemy
-                if(user.isAttackHit()){
+                if (user.isAttackHit()) {
                     enemy.setStunned(duration);
                     System.out.printf("%s stunned %s for %d turns\n", user.getName(), enemy.getName(), duration);
                 }
                 break;
             case "REVIVE":
-                if(ps.isUsed() || user.getHp() > 0) return;
+                if (ps.isUsed() || user.getHp() > 0) return;
                 System.out.printf("%s fainted! But they REJECTED the DEATH!\n", user.getName());
                 EffectRenderer.effectsAnim.add(new Effect(user.getX(), user.getY() + 35, "REVIVE"));
 
@@ -70,21 +71,21 @@ public class SkillManager {
         }
     }
 
-    public static void onCDSkill(Entity user){
+    public static void onCDSkill(Entity user) {
         List<Skill> lst = new ArrayList<>();
 
-        if(user.getActiveSkill() != null) lst.addAll(user.getActiveSkill());
+        if (user.getActiveSkill() != null) lst.addAll(user.getActiveSkill());
 
-        if(user.getWeapon().haveActiveSkill()){
+        if (user.getWeapon().haveActiveSkill()) {
             lst.addAll(user.getWeapon().getActiveSkill());
         }
 
-        if(user.getPassive() != null && user.getPassive().getName().contentEquals("REVIVE")){
+        if (user.getPassive() != null && user.getPassive().getName().contentEquals("REVIVE")) {
             lst.add(user.getPassive());
         }
 
-        for(Skill s : lst){
-            if(s.isUsed()) {
+        for (Skill s : lst) {
+            if (s.isUsed()) {
                 s.onCD();
             }
         }
@@ -179,13 +180,13 @@ public class SkillManager {
                         float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
                         damageReduced = MathUtils.clamp(Math.round(damageReduced * (1 - conPercent / 100f)), 0, 10000);
 
-                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.IGNITED);
+                        EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.IGNITED);
 
                         EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "FIRE_BALL"));
 
                         if (target.isAlive() && target.containStatus("IGNITED")) {
                             int amount = Math.round(target.getMaxHp() * 0.12f);
-                            EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.IGNITED);
+                            EntityBehavior.reduceHP(target, user, amount, DamageText.TypeText.IGNITED);
 
                             System.out.printf("SEVERED BURN! %s lost %d HP!\n", target.getName(), amount);
                             return;
@@ -232,7 +233,7 @@ public class SkillManager {
 
                             int damageReduced = MathUtils.clamp(Math.round(damage * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                            EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PARALYZE);
+                            EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.PARALYZE);
 
                             EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THUNDERBOLT"));
 
@@ -241,7 +242,7 @@ public class SkillManager {
                                 float hpPercent = 0.10f;
                                 int fulminationDamage = Math.round((target.getMaxHp() * hpPercent) * (1 - mDefPercent));
 
-                                EntityBehavior.reduceHP(target, user,fulminationDamage, DamageText.TypeText.PARALYZE);
+                                EntityBehavior.reduceHP(target, user, fulminationDamage, DamageText.TypeText.PARALYZE);
                             } else {
                                 target.addStatusCondition("PARALYZED", s.getDuration());
                                 System.out.printf("%s was struck by a thunderbolt for %d damage!\n", target.getName(), damageReduced);
@@ -301,7 +302,7 @@ public class SkillManager {
 
                     int damageReduced = MathUtils.clamp(Math.round(100 * (1 - mDefPercent) * (1 - conPercent)), 0, 10000);
 
-                    EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.CRIT);
+                    EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.CRIT);
                     System.out.printf("%s lost %d HP!\n", target.getName(), damageReduced);
 
                     int amountQS = Math.round(target.getDex() * 0.95f);
@@ -350,14 +351,14 @@ public class SkillManager {
                     int damageReduced = MathUtils.clamp(Math.round(physicalDamage * (1 - conPercent / 100f)), 0, 10000);
                     System.out.printf("Iaido deal %d damage to %s!\n", damageReduced, target.getName());
 
-                    EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PHYSICAL);
+                    EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.PHYSICAL);
 
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "IAIDO"));
 
                     if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
-                        EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user, amount, DamageText.TypeText.CRIT);
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
@@ -433,18 +434,18 @@ public class SkillManager {
                     if (isCrit) {
                         System.out.printf("CRITICAL! Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
-                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.CRIT);
                     } else {
                         System.out.printf("Thrust deal %d damage to %s!\n", damageReduced, target.getName());
 
-                        EntityBehavior.reduceHP(target, user,damageReduced, DamageText.TypeText.PHYSICAL);
+                        EntityBehavior.reduceHP(target, user, damageReduced, DamageText.TypeText.PHYSICAL);
                     }
                     EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "THRUST"));
 
                     if (target.isAlive() && target.containStatus("BLEED")) {
                         int amount = Math.round(target.getMaxHp() * 0.42f);
 
-                        EntityBehavior.reduceHP(target, user,amount, DamageText.TypeText.CRIT);
+                        EntityBehavior.reduceHP(target, user, amount, DamageText.TypeText.CRIT);
 
                         System.out.printf("SEVERED BLEED! %s lost %d HP!\n", target.getName(), amount);
                     }
@@ -453,7 +454,77 @@ public class SkillManager {
         }
     }
 
-    public static Skill getRandomActiveSkill(List<Skill> listed){
+    public static void moveActivation(Entity user, Entity target, int index, boolean isAllyTurn) {
+        if (user == null) return;
+
+        if (target == null || !target.isAlive()) return;
+
+        // get skills
+        List<Move> moveList = user.getMoveSet();
+
+        if (user.getWeapon() != null && user.getWeapon().haveActiveSkill()) {
+            moveList.addAll(user.getWeapon().getActiveSkill());
+        }
+
+        Move m = moveList.get(index);
+
+        // if user dont hav any skill
+        if (m == null) return;
+
+        if (m.isUsed()) {
+            return;
+        }
+
+        //Attack hit
+        user.setAttackHit(true);
+        //check this attack is Crit or not
+        float critChance = MathUtils.clamp(user.getCritRate() / 100f, 0, 1);
+
+        int damage = EquipmentBehaviour.damageCalculate(user);
+        boolean isCrit = false;
+
+        if (MathUtils.randomBoolean(critChance)) {
+            damage = Math.round(damage * (user.getCritBuffer() / 100f));
+            isCrit = true;
+        }
+
+        //Reduce Damage due to Physical Def
+        int damageReduced = MathUtils.clamp(Math.round(damage * (1 - EquipmentBehaviour.physicalDefCalculate(target) / 100f)), 0, 10000);
+
+        //Reduce Damage due to Con
+        float conPercent = Math.min(Entity.calculateStats(target.getCon(), 0.25f), 45f);
+        damageReduced = MathUtils.clamp(Math.round(damageReduced * (1 - conPercent / 100f)), 0, 10000);
+
+
+        int offsetA = 0, offsetD = 0;
+        if (isAllyTurn) {
+            offsetA = GameScreen.imageTile;
+        } else offsetD = GameScreen.imageTile;
+
+        m.startCD();
+
+        m.setUsed(true);
+
+        Entity originalUser = user;
+        user = activeReflection(user, target);
+        if (user != originalUser) {
+            target = originalUser;
+            if (isAllyTurn) {
+                offsetA = 0;
+                offsetD = GameScreen.imageTile;
+            } else {
+                offsetA = GameScreen.imageTile;
+                offsetD = 0;
+            }
+        }
+
+        EntityBehavior.reduceHP(target, user, damageReduced, isCrit ? DamageText.TypeText.CRIT : DamageText.TypeText.NORMAL);
+        LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#ffffff")));
+
+//                    EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "FIRE_BALL"));
+    }
+
+    public static Skill getRandomActiveSkill(List<Skill> listed) {
         List<Skill> unUsedSkills = new ArrayList<>();
         //Take all alive entity
         for (Skill skill : listed) {
@@ -461,12 +532,12 @@ public class SkillManager {
         }
 
         //Return -1 if there's no alive entity
-        if(unUsedSkills.isEmpty()) return null;
+        if (unUsedSkills.isEmpty()) return null;
 
         return new QuickGacha<Skill>(unUsedSkills).roll();
     }
 
-    public static Entity activeReflection(Entity user, Entity target){
+    public static Entity activeReflection(Entity user, Entity target) {
         if (target != null && target.containStatus("Reflection")) {
             EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "REFLECTING"));
             System.out.printf("REFLECT! %s reflect %s's attack!\n", target.getName(), user.getName());

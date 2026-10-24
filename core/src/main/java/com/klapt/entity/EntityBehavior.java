@@ -7,7 +7,7 @@ import com.klapt.main.GameScreen;
 import com.klapt.rendering.EffectRenderer;
 import com.klapt.rendering.EntityRenderer;
 import com.klapt.skill.Effect;
-import com.klapt.manager.SkillManager;
+import com.klapt.manager.MoveManager;
 import com.klapt.utilityTool.DamageText;
 import com.klapt.utilityTool.LineDrawer;
 
@@ -30,7 +30,7 @@ public class EntityBehavior {
 
         if(entity.getHp() == 0){
             if(entity.getPassive()!= null && entity.getPassive().getName().contentEquals("REVIVE")){
-                SkillManager.passiveActivation(entity, null);
+                MoveManager.passiveActivation(entity, null);
 
                 System.out.println(entity.getHp());
 
@@ -59,7 +59,7 @@ public class EntityBehavior {
             offsetA = GameScreen.imageTile;
         }else offsetD = GameScreen.imageTile;
 
-        user = SkillManager.activeReflection(user, receiver);
+        user = MoveManager.activeReflection(user, receiver);
 
         if(user != current){
             if(isAllyTurn){
@@ -112,8 +112,7 @@ public class EntityBehavior {
                 LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f , user.getY() + offsetA, receiver.getX() + GameScreen.imageTile / 2f, receiver.getY() + offsetD, 2f, new Color(1,1,1,1)));
             }
 
-            SkillManager.passiveActivation(current, receiver);
-
+            MoveManager.passiveActivation(current, receiver);
         }
     }
 

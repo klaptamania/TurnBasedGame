@@ -84,13 +84,16 @@ public class CombatManager {
 
     }
 
-    private Skill getSkillFromMove(Entity entity) {
-        Skill skill = null;
+    private Move getSkillFromMove(Entity entity) {
+        Move skill = null;
 
         String skillString = entity.getMove();
         if (skillString != null && skillString.startsWith("SkillActivation ")) {
             int skillIndex = Integer.parseInt(skillString.substring("SkillActivation ".length()).trim());
             skill = entity.getAllSkill().get(skillIndex);
+        }else if (skillString != null && skillString.startsWith("MoveActivation ")) {
+            int skillIndex = Integer.parseInt(skillString.substring("MoveActivation ".length()).trim());
+            skill = entity.getMoveSet().get(skillIndex);
         }
 
         return skill;
@@ -117,9 +120,9 @@ public class CombatManager {
     }
 
     private void actionTimeProcessor(float deltaTime) {
-
+        System.out.printf("[ATTENTION first] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
         //Get skill of two
-        Skill pSkill = null, oSkill = null;
+        Move pSkill = null, oSkill = null;
         float pActionTime = player.getActionTime(), oActionTime = opponent.getActionTime();
 
         if (pActionTime <= 0 && player.getCurrentState() == Entity.State.CASTING) {
@@ -132,6 +135,8 @@ public class CombatManager {
         //Get cast time
         float pSCastTime = (pSkill != null) ? pSkill.getSkillCastSpeed() + pActionTime : 0;
         float oSCastTime = (oSkill != null) ? oSkill.getSkillCastSpeed() + oActionTime : 0;
+        System.out.printf("[ATTENTION cast Time] Player: %f | Opponent: %f\n", pSCastTime, oSCastTime);
+
 
         //Comparing
         if (player.isThisState(Entity.State.CASTING) && opponent.isThisState(Entity.State.CASTING)) {// if both are casting skill at the same time
@@ -152,6 +157,7 @@ public class CombatManager {
 
                 player.setActionTime((pSkill != null) ? pSkill.getSkillRecoverTime() : 1.0f);
                 opponent.setActionTime((oSkill != null) ? oSkill.getSkillRecoverTime() : 1.0f);
+                opponent.setCurrentState(Entity.State.RECOVERY);
 
                 isTurnPrepared = true;
                 return;
@@ -174,15 +180,14 @@ public class CombatManager {
                     opponent.setCurrentState(Entity.State.IDLE);
                     player.setCurrentState(Entity.State.IDLE);
                 }
-
+                System.out.printf("[ATTENTION recovery] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
                 return;
             }
+            pActionTime = player.getActionTime();
+            oActionTime = opponent.getActionTime();
 
             // Check if opponent recovered while player is still casting
             if(player.isThisState(Entity.State.CASTING) && opponent.isThisState(Entity.State.RECOVERY)){
-                pActionTime = player.getActionTime();
-                oActionTime = opponent.getActionTime();
-
                 if(pActionTime == 0){
                     pActionTime = getSkillFromMove(player).getSkillCastSpeed();
                 }
@@ -194,16 +199,14 @@ public class CombatManager {
                     opponent.setActionTime(oActionTime);
                     opponent.setCurrentState(Entity.State.IDLE);
                     isTurnPrepared = false;
+                    System.out.printf("[ATTENTION recovered before!] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
                     return;
                 }
             }
             // Check if player recovered while opponent is still casting
             if(player.isThisState(Entity.State.RECOVERY) && opponent.isThisState(Entity.State.CASTING)){
-                pActionTime = player.getActionTime();
-                oActionTime = opponent.getActionTime();
-
                 if(oActionTime == 0){
-                    oActionTime = getSkillFromMove(player).getSkillCastSpeed();
+                    oActionTime = getSkillFromMove(opponent).getSkillCastSpeed();
                 }
 
                 if(pActionTime - oActionTime <= 0){
@@ -213,6 +216,32 @@ public class CombatManager {
                     player.setActionTime(pActionTime);
                     player.setCurrentState(Entity.State.IDLE);
                     isTurnPrepared = false;
+                    System.out.printf("[ATTENTION recovered before!] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+                    return;
+                }
+            }
+
+            // Check if player recover faster
+            if(player.isThisState(Entity.State.RECOVERY)){
+                if(pActionTime - oActionTime <= 0){
+                    currentState = CombatState.START_TURN;
+                    player.setActionTime(0);
+                    opponent.setActionTime(oActionTime - pActionTime);
+                    player.setCurrentState(Entity.State.IDLE);
+                    isTurnPrepared = false;
+                    System.out.printf("[ATTENTION quick Recover] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+                    return;
+                }
+            }
+            // Check if opponent recover faster
+            if(opponent.isThisState(Entity.State.RECOVERY)){
+                if(oActionTime - pActionTime <= 0){
+                    currentState = CombatState.ENEMY_THINKING;
+                    opponent.setActionTime(0);
+                    player.setActionTime(pActionTime - oActionTime);
+                    opponent.setCurrentState(Entity.State.IDLE);
+                    isTurnPrepared = false;
+                    System.out.printf("[ATTENTION quick Recover] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
                     return;
                 }
             }
@@ -227,18 +256,21 @@ public class CombatManager {
             }
         }
 
-        Skill fSkill = getSkillFromMove(firstTake);
-        Skill sSkill = getSkillFromMove(secondTake);
+        Move fSkill = getSkillFromMove(firstTake);
+        Move sSkill = getSkillFromMove(secondTake);
 
         if (sSkill != null && fSkill != null) { //reduce action time due to player's cast speed
-            secondTake.setActionTime((sSkill.getSkillCastSpeed() + secondTake.getActionTime()) - (fSkill.getSkillCastSpeed() + secondTake.getActionTime()));
+            secondTake.setActionTime((sSkill.getSkillCastSpeed() + secondTake.getActionTime()) - (fSkill.getSkillCastSpeed() + firstTake.getActionTime()));
         } else {
             secondTake.setActionTime(0f);
         }
 
         firstTake.setActionTime((fSkill != null) ? fSkill.getSkillRecoverTime() : 1.0f);
+        firstTake.setCurrentState(Entity.State.RECOVERY);
 
         isTurnPrepared = true;
+        System.out.printf("[ATTENTION end] Player: %f %b | Opponent: %f %b\n", player.getActionTime(), player.isThisState(Entity.State.RECOVERY), opponent.getActionTime(), opponent.isThisState(Entity.State.RECOVERY));
+
     }
 
     private void executing(Entity first, Entity second, float deltaTime) {
@@ -252,13 +284,14 @@ public class CombatManager {
         if (!progress2 && delayedProcessing >= 0.4f) {
             progress2 = true;
             if(second.isThisState(Entity.State.CASTING)){
-                Skill s = getSkillFromMove(second);
+                Move s = getSkillFromMove(second);
                 float fullTime = s.getSkillCastSpeed() - second.getActionTime();
                 if(fullTime >= s.getSkillCastNeed()){
                     moveProcessing(second);
                     second.setActionTime(s.getSkillRecoverTime());
                 }
                 second.setCurrentState(Entity.State.RECOVERY);
+                System.out.printf("[ATTENTION extra!] Player: %f %b | Opponent: %f %b\n", player.getActionTime(), player.isThisState(Entity.State.RECOVERY), opponent.getActionTime(), opponent.isThisState(Entity.State.RECOVERY));
             }
         }
 //
@@ -266,11 +299,14 @@ public class CombatManager {
             progress1 = false;
             progress2 = false;
 
-            first.setMove("");
-            second.setMove("");
-
-            if(first.getActionTime() == 0) first.setCurrentState(Entity.State.IDLE);
-            if(second.getActionTime() == 0) second.setCurrentState(Entity.State.IDLE);
+            if(first.getActionTime() == 0) {
+                first.setMove("");
+                first.setCurrentState(Entity.State.IDLE);
+            }
+            if(second.getActionTime() == 0) {
+                second.setMove("");
+                second.setCurrentState(Entity.State.IDLE);
+            }
 
             delayedProcessing = 0f;
             isTurnPrepared = false;
@@ -288,8 +324,8 @@ public class CombatManager {
         EntityBehavior.stunProgress(player);
         EntityBehavior.stunProgress(opponent);
 
-        SkillManager.onCDSkill(player);
-        SkillManager.onCDSkill(opponent);
+        MoveManager.onCDSkill(player);
+        MoveManager.onCDSkill(opponent);
 
         EntityBehavior.regenSP(player);
         EntityBehavior.regenSP(opponent);
@@ -321,9 +357,13 @@ public class CombatManager {
             case "Attack":
                 EntityBehavior.attack(entity, entity == player ? opponent : player, entity == player);
                 break;
+            case "MoveActivation":
+                if(skillIndex.isEmpty()) return;
+                MoveManager.moveActivation(entity,entity == player ? opponent : player, Integer.parseInt(skillIndex), entity == player);
+                break;
             case "SkillActivation":
                 if (skillIndex.isEmpty()) return;
-                SkillManager.skillActivation(entity, entity == player ? opponent : player, Integer.parseInt(skillIndex), entity == player);
+                MoveManager.skillActivation(entity, entity == player ? opponent : player, Integer.parseInt(skillIndex), entity == player);
                 break;
             case "Waiting":
                 entity.addStatusCondition("STUN", 1);
@@ -336,32 +376,26 @@ public class CombatManager {
 
         List<Move> moveList = List.of(((Enemy) opponent).getMoves());
         List<Move> activeList = new ArrayList<>();
-        activeList.add(moveList.get(0));
-        activeList.add(moveList.get(1));
         for (Move move : moveList) {
-            if (!move.getName().contentEquals("Attack") && !move.getName().contentEquals("Waiting")) {
-                int index = Integer.parseInt(move.getName());
-
-                if (!opponent.getAllSkill().get(index).isUsed()) {
-                    activeList.add(move);
-                }
-            }
+            if(!move.isUsed()) activeList.add(move);
         }
 
         QuickGacha<Move> moves = new QuickGacha<>(activeList);
 
         Move move = moves.roll();
+        String[] arr = move.getName().split(" ");
 
-        switch (move.getName()) {
-            case "Attack":
-                opponent.setMove("Attack");
+        switch (arr[0]) {
+            case "M":
+                opponent.setMove("MoveActivation " + arr[1]);
+                System.out.println("MoveActivation " + getSkillFromMove(opponent).getName());
                 break;
-            case "Waiting":
-                opponent.setMove("Waiting");
+            case "S":
+                opponent.setMove("SkillActivation " + arr[1]);
+                System.out.println("SkillActivation " + getSkillFromMove(opponent).getName());
                 break;
             default:
-                opponent.setMove("SkillActivation " + move.getName());
-                System.out.println("SkillActivation " + getSkillFromMove(opponent).getName());
+                opponent.setMove("Waiting");
                 break;
         }
     }
@@ -381,10 +415,20 @@ public class CombatManager {
 
     public void executeNormalMove() {
         clearUI();
-        currentState = CombatState.ENEMY_THINKING;
+
+        List<Move> moveSetLst = player.getMoveSet();
+        if(moveSetLst.isEmpty()){
+            showPlayerUI();
+            return;
+        }
+        stage.addActor(new MoveSelectionTable(moveSetLst, player, this));
     }
 
     public void executePlayerSkillActivation() {
+        clearUI();
+        currentState = CombatState.ENEMY_THINKING;
+    }
+    public void executePlayerMoveActivation() {
         clearUI();
         currentState = CombatState.ENEMY_THINKING;
     }
@@ -427,6 +471,7 @@ public class CombatManager {
                     }
 
                     if (player.isThisState(Entity.State.IDLE)) {
+                        System.out.println("Player turn");
                         showPlayerUI();
                         player.setCurrentState(Entity.State.CASTING);
                         currentState = CombatState.WAIT_FOR_INPUT;
@@ -440,6 +485,7 @@ public class CombatManager {
                 if (opponent != null && opponent.isAlive()) {
                     if (opponent.isThisState(Entity.State.IDLE)) {
                         opponentThinking();
+                        System.out.println("Opponent turn");
                         opponent.setCurrentState(Entity.State.CASTING);
                     }
 
@@ -466,7 +512,6 @@ public class CombatManager {
                         System.out.println(opponent.getName() + " fainted.");
                     }
                 }
-
                 break;
         }
     }

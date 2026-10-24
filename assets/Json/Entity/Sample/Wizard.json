@@ -14,25 +14,34 @@
     "Json/Armor/Head/WizardHat.json"
   ],
   "weaponPath": "Json/Weapon/Super Light/WoodenStaff.json",
+  "moveSetPath": [
+    "Json/Move/Straight_Punch.json",
+    "Json/Move/Smash.json",
+    "Json/Move/Sweep.json"
+  ],
   "activeSkillPaths": [
     "Json/Skill/ACTIVE_Fireball.json",
     "Json/Skill/ACTIVE_Thunderbolt.json"
   ],
   "moves": [
     {
-      "name": "Attack",
-      "moveWeight" : 0
+      "name": "M 0",
+      "moveWeight" : 10
     },
     {
-      "name": "Waiting",
-      "moveWeight": 0
-    },
-    {
-      "name": "0",
+      "name": "M 1",
       "moveWeight": 50
     },
     {
-      "name": "1",
+      "name": "M 2",
+      "moveWeight": 60
+    },
+    {
+      "name": "S 0",
+      "moveWeight": 50
+    },
+    {
+      "name": "S 1",
       "moveWeight": 70
     }
   ]
