@@ -1,7 +1,7 @@
 {
   "name": "Smash",
   "damage": 0,
-  "cooldown": 2,
+  "cooldown": 0,
   "skillCastSpeed": 1.3,
   "skillCastNeed": 0.65,
   "skillRecoverTime": 0.75,

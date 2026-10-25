@@ -55,7 +55,7 @@ public class SkillSelectionTable extends Table {
                         manager.showPlayerUI();
                     }
                 });
-                Label cdLabel = new Label(Integer.toString(s.getCdLeft()), Main.getAm().getSkin());
+                Label cdLabel = new Label(Float.toString(s.getCdLeft()), Main.getAm().getSkin());
                 cdLabel.setTouchable(Touchable.disabled);
                 stack.add(cdLabel);
             }

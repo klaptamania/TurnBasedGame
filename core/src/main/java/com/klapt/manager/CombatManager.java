@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.klapt.entity.Enemy;
@@ -14,6 +17,7 @@ import com.klapt.entity.Entity;
 import com.klapt.entity.EntityBehavior;
 import com.klapt.factory.EntityFactory;
 import com.klapt.main.GameScreen;
+import com.klapt.main.Main;
 import com.klapt.movement.Move;
 import com.klapt.rendering.EntityRenderer;
 import com.klapt.skill.Skill;
@@ -35,6 +39,11 @@ public class CombatManager {
     CombatState currentState = CombatState.START_TURN;
     float width, height;
 
+    Table actionTimeTable;
+    Label pTimeLabel, oTimeLabel;
+    Label pStateLabel, oStateLabel;
+    String actionTimeText = "Player: %.2f  |   Opponent: %.2f\n%15s  |   %15s";
+
     public CombatManager(float width, float height) {
         this.width = width;
         this.height = height;
@@ -43,11 +52,36 @@ public class CombatManager {
         stage = new Stage(new FitViewport(width, height));
         stage.setDebugAll(true);
 
+        Skin skin = Main.getAm().getSkin();
+
+        // Tách thành 4 Label riêng lẻ
+        pTimeLabel = new Label("Player: 0.00", skin);
+        oTimeLabel = new Label("Opponent: 0.00", skin);
+        pStateLabel = new Label("IDLE", skin);
+        oStateLabel = new Label("IDLE", skin);
+
+        actionTimeTable  = new Table();
+        actionTimeTable.setFillParent(true);
+        actionTimeTable.top().right().pad(10);
+
+        actionTimeTable.add(pTimeLabel).right().padRight(20);
+        actionTimeTable.add(new Label("|", skin));
+        actionTimeTable.add(oTimeLabel).left();
+        actionTimeTable.row().padTop(5);
+
+        actionTimeTable.add(pStateLabel).center();
+        actionTimeTable.add(new Label("|", skin));
+        actionTimeTable.add(oStateLabel).center();
+
+        stage.addActor(actionTimeTable);
+
         Gdx.input.setInputProcessor(stage);
         stage.addListener(new ClickListener(Input.Buttons.RIGHT) {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (stage.getRoot().findActor("SkillSelection") != null) {
+                    showPlayerUI();
+                }else if(stage.getRoot().findActor("MoveSelectionTable") != null){
                     showPlayerUI();
                 }
             }
@@ -119,8 +153,25 @@ public class CombatManager {
         return false;
     }
 
+
+    private void reduceCooldown(float time, Move pException, Move oException) {
+        MoveManager.onCDSkill(player, time, pException);
+        MoveManager.onCDSkill(opponent, time, oException);
+    }
+
+    private void updateLabelText() {
+        if (pTimeLabel != null && player != null && opponent != null) {
+            pTimeLabel.setText(String.format("Player: %.2f", player.getActionTime()));
+            oTimeLabel.setText(String.format("Opponent: %.2f", opponent.getActionTime()));
+
+            pStateLabel.setText(player.getCurrentState().toString());
+            oStateLabel.setText(opponent.getCurrentState().toString());
+        }
+    }
+
     private void actionTimeProcessor(float deltaTime) {
         System.out.printf("[ATTENTION first] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+        updateLabelText();
         //Get skill of two
         Move pSkill = null, oSkill = null;
         float pActionTime = player.getActionTime(), oActionTime = opponent.getActionTime();
@@ -135,8 +186,7 @@ public class CombatManager {
         //Get cast time
         float pSCastTime = (pSkill != null) ? pSkill.getSkillCastSpeed() + pActionTime : 0;
         float oSCastTime = (oSkill != null) ? oSkill.getSkillCastSpeed() + oActionTime : 0;
-        System.out.printf("[ATTENTION cast Time] Player: %f | Opponent: %f\n", pSCastTime, oSCastTime);
-
+        System.out.printf("[ATTENTION cast Time] Player cast time: %f | Opponent cast time: %f\n", pSCastTime, oSCastTime);
 
         //Comparing
         if (player.isThisState(Entity.State.CASTING) && opponent.isThisState(Entity.State.CASTING)) {// if both are casting skill at the same time
@@ -155,9 +205,10 @@ public class CombatManager {
                     secondTake = player;
                 }
 
-                player.setActionTime((pSkill != null) ? pSkill.getSkillRecoverTime() : 1.0f);
-                opponent.setActionTime((oSkill != null) ? oSkill.getSkillRecoverTime() : 1.0f);
-                opponent.setCurrentState(Entity.State.RECOVERY);
+                reduceCooldown(pSCastTime, pSkill, oSkill);
+
+                firstTake.setActionTime((pSkill != null) ? pSkill.getSkillRecoverTime() : 1.0f);
+                secondTake.setActionTime(0);
 
                 isTurnPrepared = true;
                 return;
@@ -180,7 +231,11 @@ public class CombatManager {
                     opponent.setCurrentState(Entity.State.IDLE);
                     player.setCurrentState(Entity.State.IDLE);
                 }
+
+                reduceCooldown(min, null, null);
+
                 System.out.printf("[ATTENTION recovery] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+                updateLabelText();
                 return;
             }
             pActionTime = player.getActionTime();
@@ -195,11 +250,15 @@ public class CombatManager {
                 if(oActionTime - pActionTime <= 0){
                     currentState = CombatState.ENEMY_THINKING;
                     player.setActionTime(player.getActionTime() - Math.abs(oActionTime));
+
+                    reduceCooldown(oActionTime, pSkill, oSkill);
+
                     oActionTime = 0;
                     opponent.setActionTime(oActionTime);
                     opponent.setCurrentState(Entity.State.IDLE);
                     isTurnPrepared = false;
                     System.out.printf("[ATTENTION recovered before!] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+                    updateLabelText();
                     return;
                 }
             }
@@ -212,36 +271,15 @@ public class CombatManager {
                 if(pActionTime - oActionTime <= 0){
                     currentState = CombatState.START_TURN;
                     opponent.setActionTime(opponent.getActionTime() - Math.abs(pActionTime));
+
+                    reduceCooldown(pActionTime, pSkill, oSkill);
+
                     pActionTime = 0;
                     player.setActionTime(pActionTime);
                     player.setCurrentState(Entity.State.IDLE);
                     isTurnPrepared = false;
                     System.out.printf("[ATTENTION recovered before!] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
-                    return;
-                }
-            }
-
-            // Check if player recover faster
-            if(player.isThisState(Entity.State.RECOVERY)){
-                if(pActionTime - oActionTime <= 0){
-                    currentState = CombatState.START_TURN;
-                    player.setActionTime(0);
-                    opponent.setActionTime(oActionTime - pActionTime);
-                    player.setCurrentState(Entity.State.IDLE);
-                    isTurnPrepared = false;
-                    System.out.printf("[ATTENTION quick Recover] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
-                    return;
-                }
-            }
-            // Check if opponent recover faster
-            if(opponent.isThisState(Entity.State.RECOVERY)){
-                if(oActionTime - pActionTime <= 0){
-                    currentState = CombatState.ENEMY_THINKING;
-                    opponent.setActionTime(0);
-                    player.setActionTime(pActionTime - oActionTime);
-                    opponent.setCurrentState(Entity.State.IDLE);
-                    isTurnPrepared = false;
-                    System.out.printf("[ATTENTION quick Recover] Player: %f | Opponent: %f\n", player.getActionTime(), opponent.getActionTime());
+                    updateLabelText();
                     return;
                 }
             }
@@ -260,16 +298,21 @@ public class CombatManager {
         Move sSkill = getSkillFromMove(secondTake);
 
         if (sSkill != null && fSkill != null) { //reduce action time due to player's cast speed
-            secondTake.setActionTime((sSkill.getSkillCastSpeed() + secondTake.getActionTime()) - (fSkill.getSkillCastSpeed() + firstTake.getActionTime()));
+            System.out.println(sSkill.getName());
+            if(secondTake.isThisState(Entity.State.RECOVERY)){
+                secondTake.setActionTime((secondTake.getActionTime()) - (fSkill.getSkillCastSpeed() + firstTake.getActionTime()));
+            }else secondTake.setActionTime((sSkill.getSkillCastSpeed() + secondTake.getActionTime()) - (fSkill.getSkillCastSpeed() + firstTake.getActionTime()));
+
+            reduceCooldown(fSkill.getSkillCastSpeed() + firstTake.getActionTime(), fSkill, sSkill);
         } else {
             secondTake.setActionTime(0f);
         }
 
         firstTake.setActionTime((fSkill != null) ? fSkill.getSkillRecoverTime() : 1.0f);
-        firstTake.setCurrentState(Entity.State.RECOVERY);
 
         isTurnPrepared = true;
         System.out.printf("[ATTENTION end] Player: %f %b | Opponent: %f %b\n", player.getActionTime(), player.isThisState(Entity.State.RECOVERY), opponent.getActionTime(), opponent.isThisState(Entity.State.RECOVERY));
+        updateLabelText();
 
     }
 
@@ -277,21 +320,25 @@ public class CombatManager {
         delayedProcessing += deltaTime;
         if (!progress1) {
             progress1 = true;
-            moveProcessing(first);
-            if(first.isThisState(Entity.State.CASTING)) first.setCurrentState(Entity.State.RECOVERY);
+            if(first.isThisState(Entity.State.CASTING)) {
+                moveProcessing(first);
+                first.setCurrentState(Entity.State.RECOVERY);
+            }
         }
 
         if (!progress2 && delayedProcessing >= 0.4f) {
             progress2 = true;
-            if(second.isThisState(Entity.State.CASTING)){
+            if(second.isThisState(Entity.State.CASTING) && second.isAlive()){
                 Move s = getSkillFromMove(second);
                 float fullTime = s.getSkillCastSpeed() - second.getActionTime();
                 if(fullTime >= s.getSkillCastNeed()){
                     moveProcessing(second);
                     second.setActionTime(s.getSkillRecoverTime());
                 }
-                second.setCurrentState(Entity.State.RECOVERY);
                 System.out.printf("[ATTENTION extra!] Player: %f %b | Opponent: %f %b\n", player.getActionTime(), player.isThisState(Entity.State.RECOVERY), opponent.getActionTime(), opponent.isThisState(Entity.State.RECOVERY));
+                second.setCurrentState(Entity.State.RECOVERY);
+                updateLabelText();
+
             }
         }
 //
@@ -323,9 +370,6 @@ public class CombatManager {
 
         EntityBehavior.stunProgress(player);
         EntityBehavior.stunProgress(opponent);
-
-        MoveManager.onCDSkill(player);
-        MoveManager.onCDSkill(opponent);
 
         EntityBehavior.regenSP(player);
         EntityBehavior.regenSP(opponent);
@@ -377,7 +421,26 @@ public class CombatManager {
         List<Move> moveList = List.of(((Enemy) opponent).getMoves());
         List<Move> activeList = new ArrayList<>();
         for (Move move : moveList) {
-            if(!move.isUsed()) activeList.add(move);
+            String[] arr = move.getName().split(" ");
+
+            if(arr[0].contentEquals("M")){
+                int index = Integer.parseInt(arr[1]);
+
+                if(!opponent.getMoveSet().get(index).isUsed()){
+                    activeList.add(move);
+                    System.out.println(move.getName());
+
+                }
+            }else if(arr[0].contentEquals("S")){
+                int index = Integer.parseInt(arr[1]);
+
+                if(!opponent.getAllSkill().get(index).isUsed()){
+                    activeList.add(move);
+                    System.out.println(move.getName());
+
+                }
+            }
+
         }
 
         QuickGacha<Move> moves = new QuickGacha<>(activeList);
@@ -441,6 +504,7 @@ public class CombatManager {
 
     private void clearUI() {
         stage.getRoot().clearChildren();
+        stage.addActor(actionTimeTable);
     }
 
     public void draw(SpriteBatch batch, Texture bg, float deltaTime) {
@@ -494,7 +558,9 @@ public class CombatManager {
 
                 break;
             case EXECUTE_ACTION:
-                if(!isTurnPrepared) actionTimeProcessor(deltaTime);
+                if(!isTurnPrepared) {
+                    actionTimeProcessor(deltaTime);
+                }
                 if(isTurnPrepared) executing(firstTake, secondTake,deltaTime);
 
                 break;

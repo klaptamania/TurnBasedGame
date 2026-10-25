@@ -5,11 +5,11 @@ import lombok.Setter;
 
 @lombok.Data
 public class Move implements Gacha {
-    protected String name;
+    protected String name, type;
     protected int moveWeight;
     protected int damage;
     protected float skillCastSpeed, skillCastNeed, skillRecoverTime;
-    protected int cooldown, cdLeft = 0;
+    protected float cooldown, cdLeft = 0;
 
     @Setter
     boolean used = false;
@@ -25,15 +25,7 @@ public class Move implements Gacha {
         return moveWeight;
     }
 
-    public void onCD() {
-        if (!used) return;
-
-        cdLeft--;
-        if (cdLeft == 0) {
-            used = false;
-        }
-    }
     public void startCD() {
-        cdLeft = cooldown + 1;
+        cdLeft = cooldown;
     }
 }

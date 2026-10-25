@@ -1,8 +1,8 @@
 {
   "name": "Sweep",
   "damage": 0,
-  "cooldown": 2,
-  "skillCastSpeed": 0.95,
+  "cooldown": 0,
+  "skillCastSpeed": 0.75,
   "skillCastNeed": 0.5,
   "skillRecoverTime": 0.5,
   "type": "Move"

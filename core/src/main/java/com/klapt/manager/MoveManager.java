@@ -71,22 +71,34 @@ public class MoveManager {
         }
     }
 
-    public static void onCDSkill(Entity user) {
-        List<Skill> lst = new ArrayList<>();
+    public static void onCDSkill(Entity user, float time, Move exception) {
+        List<Skill> sLst = new ArrayList<>();
+        List<Move> mLst = new ArrayList<>();
 
-        if (user.getActiveSkill() != null) lst.addAll(user.getActiveSkill());
+        if (user.getActiveSkill() != null) sLst.addAll(user.getActiveSkill());
+        mLst = user.getMoveSet();
 
         if (user.getWeapon().haveActiveSkill()) {
-            lst.addAll(user.getWeapon().getActiveSkill());
+            sLst.addAll(user.getWeapon().getActiveSkill());
         }
 
         if (user.getPassive() != null && user.getPassive().getName().contentEquals("REVIVE")) {
-            lst.add(user.getPassive());
+            sLst.add(user.getPassive());
         }
 
-        for (Skill s : lst) {
+        for (Skill s : sLst) {
             if (s.isUsed()) {
-                s.onCD();
+
+                s.setCdLeft(Math.max(0, s.getCdLeft() - time));
+                if(s.getCdLeft() <= 0) s.setUsed(false);
+            }
+        }
+
+        for(Move m : mLst){
+            if(m.isUsed()){
+
+                m.setCdLeft(Math.max(0, m.getCdLeft() - time));
+                if(m.getCdLeft() <= 0) m.setUsed(false);
             }
         }
     }
@@ -520,7 +532,7 @@ public class MoveManager {
 
         EntityBehavior.reduceHP(target, user, damageReduced, isCrit ? DamageText.TypeText.CRIT : DamageText.TypeText.NORMAL);
         LineDrawer.container.add(new LineDrawer(user.getX() + GameScreen.imageTile / 2f, user.getY() + offsetA, target.getX() + GameScreen.imageTile / 2f, target.getY() + offsetD, 3f, Color.valueOf("#ffffff")));
-
+        System.out.printf("%s attack %s for %d damage!\n", user.getName(), target.getName(), damageReduced);
 //                    EffectRenderer.effectsAnim.add(new Effect(target.getX(), target.getY(), "FIRE_BALL"));
     }
 

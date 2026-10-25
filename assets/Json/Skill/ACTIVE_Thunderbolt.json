@@ -7,5 +7,6 @@
   "skillCastSpeed": 0.97,
   "skillCastNeed": 0.05,
   "skillRecoverTime": 0.45,
-  "cost": 45
+  "cost": 45,
+  "type": "Skill"
 }

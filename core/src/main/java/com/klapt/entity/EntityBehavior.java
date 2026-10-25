@@ -36,7 +36,7 @@ public class EntityBehavior {
 
                 if(entity.getHp() != 0){return;}
             }
-
+            entity.callOfDeath();
             System.out.println(entity.getName() + " fainted.");
         }
     }

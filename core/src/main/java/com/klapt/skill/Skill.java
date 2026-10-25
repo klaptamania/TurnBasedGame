@@ -10,10 +10,6 @@ public class Skill extends Move{
     int duration;
     int cost;
 
-    public int getCooldown() {
-        return cooldown + 1;
-    }
-
     @Override
     public int getWeight() {
         return Math.round(getChance());
